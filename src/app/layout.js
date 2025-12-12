@@ -31,14 +31,17 @@ export default function RootLayout({ children }) {
 
   return (
     <html lang="en" suppressHydrationWarning={true}>
-      <head>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        suppressHydrationWarning={true}
+      >
         {gaId && (
           <>
             <Script
               src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
-              strategy="beforeInteractive"
+              strategy="afterInteractive"
             />
-            <Script id="google-analytics" strategy="beforeInteractive">
+            <Script id="google-analytics" strategy="afterInteractive">
               {`
                 window.dataLayer = window.dataLayer || [];
                 function gtag(){dataLayer.push(arguments);}
@@ -50,11 +53,6 @@ export default function RootLayout({ children }) {
             </Script>
           </>
         )}
-      </head>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-        suppressHydrationWarning={true}
-      >
         <ErrorBoundary>
           <TimeoutWrapper timeout={15000}>
             <ClientAuthProvider>
