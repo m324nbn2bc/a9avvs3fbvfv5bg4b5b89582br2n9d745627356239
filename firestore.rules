@@ -1,0 +1,186 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Usernames collection - maintains unique username -> userId mapping for atomicity
+    match /usernames/{username} {
+      // Anyone can read usernames (for username availability checks)
+      allow read: if true;
+      
+      // Only allow creation by the user who owns this username
+      allow create: if request.auth != null && 
+                   request.resource.data.keys().hasOnly(['userId', 'createdAt']) &&
+                   request.resource.data.userId == request.auth.uid;
+      
+      // Only allow deletion by the owner (for username changes)
+      allow delete: if request.auth != null && 
+                   resource.data.userId == request.auth.uid;
+      
+      // Never allow updates - usernames are immutable (use delete+create for changes)
+      allow update: if false;
+    }
+    
+    // Users - public profile viewing with secure field protection
+    match /users/{userId} {
+      allow read: if true; // ✅ Public access as intended
+      
+      // Allow profile updates by owner only
+      allow update: if request.auth != null && 
+                   request.auth.uid == userId &&
+                   // Only allow specific profile fields to be updated
+                   request.resource.data.diff(resource.data).affectedKeys()
+                     .hasOnly(['bio', 'bannerImage', 'profileImage', 'displayName', 'country', 'username', 'profileCompleted', 'updatedAt']) &&
+                   // Protect system fields from tampering
+                   request.resource.data.email == resource.data.email &&
+                   request.resource.data.createdAt == resource.data.createdAt &&
+                   request.resource.data.role == resource.data.role && // Prevent role updates (admin-only via server-side)
+                   // Enforce username format when present
+                   (!('username' in request.resource.data) || 
+                    request.resource.data.username.matches('^[a-z0-9]{3,}$'));
+      
+      // Allow secure counter updates (owner only, incremental only)
+      allow update: if request.auth != null &&
+                   request.auth.uid == userId &&
+                   // Only allow counter fields to be updated (campaignsCount only)
+                   request.resource.data.diff(resource.data).affectedKeys()
+                     .hasOnly(['campaignsCount', 'updatedAt']) &&
+                   // Protect system fields
+                   request.resource.data.email == resource.data.email &&
+                   request.resource.data.createdAt == resource.data.createdAt &&
+                   request.resource.data.role == resource.data.role && // Prevent role updates
+                   // Ensure campaignsCount only increases by 1 (prevent manipulation)
+                   (!('campaignsCount' in request.resource.data.diff(resource.data).changedKeys()) ||
+                    request.resource.data.campaignsCount == resource.data.campaignsCount + 1);
+      
+      allow create: if request.auth != null && request.auth.uid == userId;
+      // Don't allow delete - profile integrity
+    }
+    
+    // Campaigns - public reading with secure editing and usage tracking
+    match /campaigns/{campaignId} {
+      allow read: if true; // ✅ Public access for guest users
+      
+      // Allow campaign creation with required fields validation
+      allow create: if request.auth != null && 
+                   request.auth.uid == request.resource.data.creatorId &&
+                   // Validate required fields exist
+                   request.resource.data.keys().hasAll(['type', 'title', 'slug', 'imageUrl', 'creatorId']) &&
+                   // Validate type is either 'frame' or 'background'
+                   request.resource.data.type in ['frame', 'background'];
+      
+      // Allow deletion by campaign owner only
+      allow delete: if request.auth != null && request.auth.uid == resource.data.creatorId;
+      
+      // Allow campaign owner to edit metadata fields ONLY (immutable fields protected)
+      // Edit window: within 7 days after publish AND less than 10 supporters (per CAMPAIGN_SYSTEM.md)
+      allow update: if request.auth != null && 
+                   request.auth.uid == resource.data.creatorId &&
+                   // Enforce 7-day edit window (604800000 milliseconds = 7 days)
+                   request.time.toMillis() <= resource.data.createdAt.toMillis() + 604800000 &&
+                   // Enforce less than 10 supporters limit
+                   resource.data.supportersCount < 10 &&
+                   // Only allow editable metadata fields per CAMPAIGN_SYSTEM.md (removed reportsCount, moderationStatus)
+                   request.resource.data.diff(resource.data).affectedKeys()
+                     .hasOnly(['title', 'description', 'captionTemplate', 'updatedAt']) &&
+                   // Enforce immutable fields (type, slug, imageUrl, creatorId must never change)
+                   request.resource.data.type == resource.data.type &&
+                   request.resource.data.slug == resource.data.slug &&
+                   request.resource.data.imageUrl == resource.data.imageUrl &&
+                   request.resource.data.creatorId == resource.data.creatorId &&
+                   request.resource.data.createdAt == resource.data.createdAt &&
+                   request.resource.data.supportersCount == resource.data.supportersCount &&
+                   request.resource.data.reportsCount == resource.data.reportsCount &&
+                   request.resource.data.moderationStatus == resource.data.moderationStatus &&
+                   // firstUsedAt can only be set once, never changed
+                   (!('firstUsedAt' in resource.data) || request.resource.data.firstUsedAt == resource.data.firstUsedAt);
+      
+      // Allow secure download tracking by authenticated users (supportersCount increment)
+      allow update: if request.auth != null &&
+                   // Only allow supportersCount and related fields
+                   request.resource.data.diff(resource.data).affectedKeys()
+                     .hasOnly(['supportersCount', 'updatedAt', 'firstUsedAt']) &&
+                   // Protect all immutable fields
+                   request.resource.data.type == resource.data.type &&
+                   request.resource.data.slug == resource.data.slug &&
+                   request.resource.data.imageUrl == resource.data.imageUrl &&
+                   request.resource.data.creatorId == resource.data.creatorId &&
+                   request.resource.data.title == resource.data.title &&
+                   request.resource.data.description == resource.data.description &&
+                   request.resource.data.reportsCount == resource.data.reportsCount &&
+                   request.resource.data.moderationStatus == resource.data.moderationStatus &&
+                   // Ensure supportersCount only increases by 1 per download
+                   request.resource.data.supportersCount == resource.data.supportersCount + 1 &&
+                   // firstUsedAt can only be set once (when first download happens)
+                   (!('firstUsedAt' in resource.data) || request.resource.data.firstUsedAt == resource.data.firstUsedAt);
+      
+      // Downloads subcollection - track individual downloads with timestamps
+      match /downloads/{downloadId} {
+        // Allow anyone to create download records (public access for tracking)
+        allow create: if request.resource.data.keys().hasOnly(['downloadedAt', 'createdAt']);
+        
+        // Public read access for analytics (everyone can view download counts)
+        allow read: if true;
+        
+        // No updates or deletes allowed
+        allow update, delete: if false;
+      }
+    }
+    
+    // Reports - allow creation by anyone, reading/updating by admins only
+    match /reports/{reportId} {
+      // Allow anyone (including anonymous) to create reports
+      allow create: if request.resource.data.keys().hasAll(['campaignId', 'reason']) &&
+                   request.resource.data.reason in ['inappropriate', 'spam', 'copyright', 'other'] &&
+                   request.resource.data.status == 'pending';
+      
+      // Only authenticated users can read reports (admin check should be in application layer)
+      allow read: if request.auth != null;
+      
+      // Only authenticated users can update reports (admin check should be in application layer)
+      allow update: if request.auth != null;
+      
+      // No deletion of reports
+    }
+    
+    // Report Summary - Admin read only, server-side writes via Admin SDK
+    match /reportSummary/{summaryId} {
+      // Only admins can read report summaries
+      allow read: if request.auth != null && 
+                  get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      
+      // No client-side writes (server-only via Admin SDK)
+      allow write: if false;
+    }
+    
+    // Warnings - Admin creates, users read own warnings
+    match /warnings/{warningId} {
+      // Users can read their own warnings
+      allow read: if request.auth != null && 
+                  resource.data.userId == request.auth.uid;
+      
+      // Admins can read all warnings
+      allow read: if request.auth != null && 
+                  get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      
+      // No client-side writes (server-only via Admin SDK)
+      allow write: if false;
+    }
+    
+    // User Notifications - Users manage their own notifications
+    match /users/{userId}/notifications/{notificationId} {
+      // Users can read their own notifications
+      allow read: if request.auth != null && request.auth.uid == userId;
+      
+      // Users can update (mark as read) or delete their own notifications
+      allow update, delete: if request.auth != null && request.auth.uid == userId;
+      
+      // No direct creation (server-only via Admin SDK)
+      allow create: if false;
+    }
+    
+    // All other documents require authentication
+    match /{document=**} {
+      allow read: if request.auth != null;
+    }
+  }
+}

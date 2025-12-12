@@ -1,0 +1,280 @@
+@import "tailwindcss";
+
+/* Fix Tailwind v4 hover variants - restore v3 behavior */
+/* v4 wraps hover in @media (hover: hover) which breaks on touch devices */
+/* This custom variant removes that wrapper and makes hover work everywhere */
+@custom-variant hover (&:hover);
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+/* Fix Tailwind v4 group-hover not working - force higher specificity */
+.group:hover .group-hover\:opacity-100 {
+  opacity: 1 !important;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* Global Button Standardization - Consistent styling for all buttons */
+
+/* Base button class - Applied to ALL buttons for consistency */
+.btn-base {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem; /* rounded-lg - 8px */
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  transform: scale(1);
+  outline: none;
+}
+
+.btn-base:hover {
+  transform: scale(1.03);
+}
+
+.btn-base:focus {
+  outline: 2px solid #3b82f6; /* blue-500 for universal focus visibility */
+  outline-offset: 2px;
+}
+
+/* Primary button styling */
+.btn-primary {
+  background: linear-gradient(to right, #059669, #047857); /* emerald-600 to emerald-700 */
+  color: white;
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}
+
+.btn-primary:hover {
+  background: linear-gradient(to right, #047857, #065f46); /* emerald-700 to emerald-800 */
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+}
+
+.btn-primary:focus {
+  outline: 2px solid #10b981; /* emerald-500 focus ring for primary buttons */
+  outline-offset: 2px;
+}
+
+/* Secondary button styling */
+.btn-secondary {
+  background: white;
+  border: 1px solid #d1d5db; /* gray-300 */
+  color: #374151; /* gray-700 */
+}
+
+.btn-secondary:hover {
+  background: #f9fafb; /* gray-50 */
+  border-color: #9ca3af; /* gray-400 */
+}
+
+.btn-secondary:focus {
+  outline: 2px solid #6b7280; /* gray-500 focus ring for secondary buttons */
+  outline-offset: 2px;
+}
+
+/* Danger button styling */
+.btn-danger {
+  background: #dc2626; /* red-600 */
+  color: white;
+}
+
+.btn-danger:hover {
+  background: #b91c1c; /* red-700 */
+}
+
+.btn-danger:focus {
+  outline: 2px solid #ef4444; /* red-500 focus ring for danger buttons */
+  outline-offset: 2px;
+}
+
+/* Warning button styling */
+.btn-warning {
+  background: #eab308; /* yellow-500 */
+  color: white;
+}
+
+.btn-warning:hover {
+  background: #ca8a04; /* yellow-600 */
+}
+
+.btn-warning:focus {
+  outline: 2px solid #facc15; /* yellow-400 focus ring for warning buttons */
+  outline-offset: 2px;
+}
+
+/* Google/Social button styling */
+.btn-google {
+  background: white;
+  border: 1px solid #d1d5db; /* gray-300 */
+  color: #374151; /* gray-700 */
+  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+}
+
+.btn-google:hover {
+  background: #fef3c7; /* yellow-50 */
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+}
+
+/* Link button styling (text buttons) */
+.btn-link {
+  background: transparent;
+  color: #059669; /* emerald-600 */
+  text-decoration: none;
+  border: none;
+  padding: 0;
+}
+
+.btn-link:hover {
+  color: #047857; /* emerald-700 */
+  text-decoration: underline;
+  transform: scale(1.02); /* Subtle zoom for text buttons */
+}
+
+/* Info button styling (for refresh, reload, etc.) */
+.btn-info {
+  background: #3b82f6; /* blue-500 */
+  color: white;
+}
+
+.btn-info:hover {
+  background: #2563eb; /* blue-600 */
+}
+
+.btn-info:focus {
+  outline: 2px solid #60a5fa; /* blue-400 focus ring */
+  outline-offset: 2px;
+}
+
+/* Neutral/utility button styling (for cancel, change, etc.) */
+.btn-neutral {
+  background: #e5e7eb; /* gray-200 */
+  color: #374151; /* gray-700 */
+}
+
+.btn-neutral:hover {
+  background: #d1d5db; /* gray-300 */
+}
+
+.btn-neutral:focus {
+  outline: 2px solid #9ca3af; /* gray-400 focus ring */
+  outline-offset: 2px;
+}
+
+/* Social media button variants */
+.btn-twitter {
+  background: #60a5fa; /* blue-400 - Twitter brand color */
+  color: white;
+}
+
+.btn-twitter:hover {
+  background: #3b82f6; /* blue-500 */
+}
+
+.btn-twitter:focus {
+  outline: 2px solid #93c5fd; /* blue-300 focus ring */
+  outline-offset: 2px;
+}
+
+.btn-facebook {
+  background: #2563eb; /* blue-600 - Facebook brand color */
+  color: white;
+}
+
+.btn-facebook:hover {
+  background: #1d4ed8; /* blue-700 */
+}
+
+.btn-facebook:focus {
+  outline: 2px solid #60a5fa; /* blue-400 focus ring */
+  outline-offset: 2px;
+}
+
+.btn-whatsapp {
+  background: #22c55e; /* green-500 - WhatsApp brand color */
+  color: white;
+}
+
+.btn-whatsapp:hover {
+  background: #16a34a; /* green-600 */
+}
+
+.btn-whatsapp:focus {
+  outline: 2px solid #4ade80; /* green-400 focus ring */
+  outline-offset: 2px;
+}
+
+/* Disabled state for all buttons */
+.btn-base:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: scale(1);
+}
+
+.btn-base:disabled:hover {
+  transform: scale(1);
+}
+
+/* Legacy hover-zoom class - kept for backward compatibility but enhanced */
+.hover-zoom {
+  transform: scale(1);
+  transition: transform 0.2s ease-in-out;
+  cursor: pointer;
+}
+
+.hover-zoom:hover {
+  transform: scale(1.03);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+@keyframes toast-progress {
+  0% {
+    width: 100%;
+  }
+  100% {
+    width: 0%;
+  }
+}
+
+.animate-toast-progress {
+  animation: toast-progress 10s linear forwards;
+}
+
+/* Hide scrollbar for horizontal scrolling on mobile tabs */
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+/* Tailwind custom breakpoint for extra small screens */
+@media (min-width: 475px) {
+  .xs\:inline {
+    display: inline;
+  }
+  .xs\:hidden {
+    display: none;
+  }
+}
