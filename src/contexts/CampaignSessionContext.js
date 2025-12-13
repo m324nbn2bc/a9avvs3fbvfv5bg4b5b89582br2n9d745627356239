@@ -46,7 +46,6 @@ export function CampaignSessionProvider({ children }) {
     
     // First check React state
     if (sessions[slug]) {
-      console.log('[SESSION] getSession - returning from React state, downloaded:', sessions[slug].downloaded);
       return sessions[slug];
     }
     
@@ -60,7 +59,6 @@ export function CampaignSessionProvider({ children }) {
           const session = JSON.parse(data);
           // Check if session is not expired
           if (Date.now() - session.timestamp <= TWENTY_FOUR_HOURS) {
-            console.log('[SESSION] getSession - returning from sessionStorage, downloaded:', session.downloaded);
             return session;
           }
         }
@@ -69,7 +67,6 @@ export function CampaignSessionProvider({ children }) {
       }
     }
     
-    console.log('[SESSION] getSession - no session found');
     return null;
   }, [sessions]);
 
@@ -147,9 +144,7 @@ export function CampaignSessionProvider({ children }) {
 
   // Mark as downloaded
   const markDownloaded = useCallback((slug) => {
-    console.log('[SESSION] markDownloaded called for slug:', slug);
     updateSession(slug, { downloaded: true, downloadedAt: Date.now() });
-    console.log('[SESSION] markDownloaded - updateSession called');
   }, [updateSession]);
 
   // Set campaign data

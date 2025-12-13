@@ -415,11 +415,11 @@ function CampaignAdjustContent() {
         }
       }
       
-      console.log('[ADJUST] About to call markDownloaded');
       campaignSession.markDownloaded(slug);
-      console.log('[ADJUST] markDownloaded called, about to router.push');
-      router.push(`/campaign/${slug}/result`);
-      console.log('[ADJUST] router.push called');
+      
+      // Use window.location for reliable navigation after file download
+      // router.push can fail silently when browser is handling a download
+      window.location.href = `/campaign/${slug}/result`;
     } catch (error) {
       console.error('Error downloading image:', error);
       setError('Failed to download image. Please try again.');
