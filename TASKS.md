@@ -28,42 +28,6 @@ This document tracks **unimplemented features only**. All completed features are
 
 ---
 
-## 🏠 Homepage Enhancement: Featured Sections
-
-**Status:** ✅ **COMPLETED** (December 12, 2025 - Updated)  
-**Goal:** Add Top Campaigns and Top Creators sections to the main homepage
-
-### Implementation Summary
-
-Added two featured sections to the homepage below the Hero:
-
-**1. Top Campaigns Section (`FeaturedCampaigns.js`)**
-- Displays 4 most popular campaigns (sorted by supportersCount)
-- Horizontal scrollable row layout (single row with overflow-x scroll)
-- Fixed width cards (256px mobile, 288px desktop)
-- Shows: Campaign image, title, creator info, supports count
-- Section header with "View All" link visible on ALL screen sizes
-- No description text - clean minimal header
-- Skeleton loading state while data loads
-- White background
-
-**2. Top Creators Section (`FeaturedCreators.js`)**
-- Displays top 3 creators (by total supports)
-- Table/list structure matching `/creators` page design
-- Green gradient header with columns: Rank | Creator | Supports
-- Row items with: rank badge (gold/silver/bronze), avatar, display name, @username, support count
-- Section header with "View All" link visible on ALL screen sizes
-- No description text - clean minimal header
-- Skeleton loading state
-- Gray background for visual separation
-
-### Files Created/Modified
-
-- ✅ `src/components/FeaturedCampaigns.js` - Updated component
-- ✅ `src/components/FeaturedCreators.js` - Updated component
-- ✅ `src/app/(chrome)/page.js` - Homepage with both sections
-
----
 
 ## 🎯 Phase 1: Settings Hub Architecture (DEFERRED)
 
