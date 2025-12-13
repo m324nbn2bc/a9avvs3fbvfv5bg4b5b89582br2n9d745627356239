@@ -222,15 +222,24 @@ function CampaignAdjustContent() {
     campaignSession.setAdjustments(slug, adjustments);
   }, [adjustments, slug, session, campaignSession]);
 
-  const handleWheel = useCallback((e) => {
-    if (!userPhoto) return;
-    e.preventDefault();
-    
-    const delta = e.deltaY > 0 ? -0.1 : 0.1;
-    setAdjustments(prev => ({
-      ...prev,
-      scale: Math.max(0.1, Math.min(10, prev.scale + delta))
-    }));
+  // Attach wheel listener with passive: false to allow preventDefault
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const handleWheel = (e) => {
+      if (!userPhoto) return;
+      e.preventDefault();
+      
+      const delta = e.deltaY > 0 ? -0.1 : 0.1;
+      setAdjustments(prev => ({
+        ...prev,
+        scale: Math.max(0.1, Math.min(10, prev.scale + delta))
+      }));
+    };
+
+    canvas.addEventListener('wheel', handleWheel, { passive: false });
+    return () => canvas.removeEventListener('wheel', handleWheel);
   }, [userPhoto]);
 
   const getPointerDistance = (p1, p2) => {
@@ -468,7 +477,6 @@ function CampaignAdjustContent() {
                       onPointerUp={handlePointerUp}
                       onPointerCancel={handlePointerUp}
                       onPointerLeave={handlePointerUp}
-                      onWheel={handleWheel}
                       onContextMenu={(e) => e.preventDefault()}
                     />
                   </div>
