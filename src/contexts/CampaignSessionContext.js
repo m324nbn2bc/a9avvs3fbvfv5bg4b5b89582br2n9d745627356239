@@ -40,9 +40,34 @@ export function CampaignSessionProvider({ children }) {
   }, []);
 
   // Get session for specific campaign
+  // Falls back to sessionStorage to handle race conditions during navigation
   const getSession = useCallback((slug) => {
     if (!slug) return null;
-    return sessions[slug] || null;
+    
+    // First check React state
+    if (sessions[slug]) {
+      return sessions[slug];
+    }
+    
+    // Fall back to sessionStorage for most up-to-date data
+    // This handles race conditions when state hasn't updated yet
+    if (typeof window !== 'undefined') {
+      try {
+        const key = `campaign_session_${slug}`;
+        const data = sessionStorage.getItem(key);
+        if (data) {
+          const session = JSON.parse(data);
+          // Check if session is not expired
+          if (Date.now() - session.timestamp <= TWENTY_FOUR_HOURS) {
+            return session;
+          }
+        }
+      } catch (error) {
+        console.error('Error reading session from storage:', error);
+      }
+    }
+    
+    return null;
   }, [sessions]);
 
   // Update session for specific campaign

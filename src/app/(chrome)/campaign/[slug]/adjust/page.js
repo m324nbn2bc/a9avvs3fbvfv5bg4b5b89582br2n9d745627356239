@@ -383,19 +383,16 @@ function CampaignAdjustContent() {
   const handleDownload = async () => {
     if (!userPhoto || !campaign) return;
     
-    console.log('1. Starting download...');
     setDownloading(true);
     setError('');
     
     try {
-      console.log('2. Calling composeImages...');
       const { blob } = await composeImages(
         userPhoto,
         getCampaignPreview(campaign.imageUrl),
         adjustments,
         campaign.type
       );
-      console.log('3. composeImages completed, blob:', blob);
       
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -405,29 +402,23 @@ function CampaignAdjustContent() {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      console.log('4. File download triggered');
       
       try {
-        console.log('5. Calling track-download API...');
         await fetch('/api/campaigns/track-download', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ campaignId: campaign.id })
         });
-        console.log('6. Track download finished');
       } catch (trackError) {
-        console.warn('6. Track download failed:', trackError);
+        if (process.env.NODE_ENV === 'development') {
+          console.warn('Failed to track download:', trackError);
+        }
       }
       
-      console.log('7. Calling markDownloaded...');
       campaignSession.markDownloaded(slug);
-      console.log('8. markDownloaded completed');
-      
-      console.log('9. Calling router.push...');
       router.push(`/campaign/${slug}/result`);
-      console.log('10. router.push called');
     } catch (error) {
-      console.error('ERROR caught:', error);
+      console.error('Error downloading image:', error);
       setError('Failed to download image. Please try again.');
       setDownloading(false);
     }
