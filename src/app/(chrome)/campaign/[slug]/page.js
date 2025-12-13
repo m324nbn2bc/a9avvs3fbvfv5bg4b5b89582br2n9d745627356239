@@ -41,7 +41,7 @@ function CampaignUploadContent() {
 
   const fileInputRef = useRef();
 
-  // Fetch campaign data
+  // Fetch campaign data - only run when slug changes
   useEffect(() => {
     const fetchCampaign = async () => {
       if (!slug) return;
@@ -72,7 +72,8 @@ function CampaignUploadContent() {
     };
     
     fetchCampaign();
-  }, [slug, campaignSession]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slug]);
 
   // Handle photo selection
   const handlePhotoSelect = async (e) => {
