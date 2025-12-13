@@ -287,6 +287,7 @@ function AdminAppealsContent() {
                               alt={appeal.userInfo.username}
                               fill
                               className="object-cover"
+                              unoptimized
                             />
                           </div>
                         ) : (
@@ -311,6 +312,7 @@ function AdminAppealsContent() {
                                 alt={appeal.targetInfo.title}
                                 fill
                                 className="object-cover"
+                                unoptimized
                               />
                             </div>
                           )}

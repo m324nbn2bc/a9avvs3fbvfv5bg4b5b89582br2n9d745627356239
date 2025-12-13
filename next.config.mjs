@@ -11,6 +11,30 @@ const nextConfig = {
     ignoreBuildErrors: false,
   },
   
+  // Configure remote image patterns for Next.js Image optimization
+  // Note: ImageKit URLs should use unoptimized={true} on Image components
+  // This is a fallback safety measure
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'ik.imagekit.io',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.supabase.co',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.googleusercontent.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'firebasestorage.googleapis.com',
+      },
+    ],
+  },
+  
   // Configure headers to prevent hanging and improve compatibility
   async headers() {
     return [

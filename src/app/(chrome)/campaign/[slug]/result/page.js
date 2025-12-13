@@ -236,6 +236,7 @@ export default function CampaignResultPage() {
                               alt={creator.displayName}
                               fill
                               className="object-cover"
+                              unoptimized
                             />
                           </div>
                         )}

@@ -203,6 +203,7 @@ function AppealsContent() {
                             width={64}
                             height={64}
                             className="w-16 h-16 object-cover rounded"
+                            unoptimized
                           />
                         )}
                         <div className="flex-1">

@@ -204,6 +204,7 @@ function CampaignUploadContent() {
                         alt={campaign.title}
                         fill
                         className="object-contain"
+                        unoptimized
                       />
                     </div>
                     <div className="absolute top-4 right-4 bg-emerald-500 text-white px-3 py-1 rounded-full text-xs font-semibold uppercase">
@@ -220,6 +221,7 @@ function CampaignUploadContent() {
                             alt={creator.displayName}
                             fill
                             className="object-cover"
+                            unoptimized
                           />
                         </div>
                       )}
