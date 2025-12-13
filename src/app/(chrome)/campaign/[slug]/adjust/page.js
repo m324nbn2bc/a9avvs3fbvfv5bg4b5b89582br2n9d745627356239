@@ -66,10 +66,17 @@ function CampaignAdjustContent() {
       
       if (currentSession.userPhotoPreview) {
         try {
-          const response = await fetch(currentSession.userPhotoPreview);
-          const blob = await response.blob();
+          const dataUrl = currentSession.userPhotoPreview;
+          const [header, base64Data] = dataUrl.split(',');
+          const mimeType = header.match(/:(.*?);/)?.[1] || 'image/jpeg';
+          const byteString = atob(base64Data);
+          const byteArray = new Uint8Array(byteString.length);
+          for (let i = 0; i < byteString.length; i++) {
+            byteArray[i] = byteString.charCodeAt(i);
+          }
+          const blob = new Blob([byteArray], { type: mimeType });
           const file = new File([blob], currentSession.userPhoto?.name || 'photo.jpg', {
-            type: currentSession.userPhoto?.type || 'image/jpeg'
+            type: currentSession.userPhoto?.type || mimeType
           });
           setUserPhoto(file);
         } catch (error) {
