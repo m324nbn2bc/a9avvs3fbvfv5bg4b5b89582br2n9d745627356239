@@ -31,12 +31,16 @@ export default function CampaignResultPage() {
   // Load session and check route guard
   useEffect(() => {
     const loadSession = async () => {
+      console.log('[RESULT] loadSession called');
       const currentSession = campaignSession.getSession(slug);
+      console.log('[RESULT] currentSession.downloaded:', currentSession?.downloaded);
       
       // Route guard: check if downloaded
       if (!requireDownloadComplete(currentSession, router, slug)) {
+        console.log('[RESULT] requireDownloadComplete returned false - redirecting back!');
         return; // Will redirect
       }
+      console.log('[RESULT] requireDownloadComplete passed!');
       
       setSession(currentSession);
       setCampaign(currentSession.campaignData);
