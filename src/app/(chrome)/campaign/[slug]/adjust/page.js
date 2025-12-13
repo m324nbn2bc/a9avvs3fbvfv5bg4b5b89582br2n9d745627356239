@@ -403,17 +403,16 @@ function CampaignAdjustContent() {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
       
-      try {
-        await fetch('/api/campaigns/track-download', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ campaignId: campaign.id })
-        });
-      } catch (trackError) {
+      // Track download in background (non-blocking)
+      fetch('/api/campaigns/track-download', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ campaignId: campaign.id })
+      }).catch((trackError) => {
         if (process.env.NODE_ENV === 'development') {
           console.warn('Failed to track download:', trackError);
         }
-      }
+      });
       
       campaignSession.markDownloaded(slug);
       router.push(`/campaign/${slug}/result`);
