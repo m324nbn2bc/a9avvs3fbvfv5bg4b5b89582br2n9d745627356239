@@ -147,13 +147,6 @@ function CampaignAdjustContent() {
     loadUserImage();
   }, [userPhoto]);
 
-  // Trigger initial render when images are ready
-  useEffect(() => {
-    if (imagesReady) {
-      renderPreview();
-    }
-  }, [imagesReady, renderPreview]);
-
   const renderPreview = useCallback(() => {
     if (!offscreenCanvasRef.current || !canvasRef.current || !userPhotoImgRef.current || !campaignImgRef.current) {
       return;
@@ -208,6 +201,13 @@ function CampaignAdjustContent() {
       displayCtx.drawImage(offscreen, 0, 0);
     }
   }, [adjustments, campaign, isInteracting]);
+
+  // Trigger initial render when images are ready
+  useEffect(() => {
+    if (imagesReady) {
+      renderPreview();
+    }
+  }, [imagesReady, renderPreview]);
 
   useEffect(() => {
     if (rafRef.current) {
