@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 
 const CampaignSessionContext = createContext(null);
 
@@ -8,8 +8,6 @@ const TWENTY_FOUR_HOURS = 24 * 60 * 60 * 1000;
 
 export function CampaignSessionProvider({ children }) {
   const [sessions, setSessions] = useState({});
-  // Store large image data in memory only (not sessionStorage)
-  const imageDataRef = useRef({});
 
   // Load sessions from sessionStorage on mount
   useEffect(() => {
@@ -41,15 +39,10 @@ export function CampaignSessionProvider({ children }) {
     setSessions(loadedSessions);
   }, []);
 
-  // Get session for specific campaign (includes in-memory image data)
+  // Get session for specific campaign
   const getSession = useCallback((slug) => {
     if (!slug) return null;
-    const session = sessions[slug];
-    if (!session) return null;
-    
-    // Merge in-memory image data with session
-    const imageData = imageDataRef.current[slug] || {};
-    return { ...session, ...imageData };
+    return sessions[slug] || null;
   }, [sessions]);
 
   // Update session for specific campaign
@@ -69,11 +62,10 @@ export function CampaignSessionProvider({ children }) {
         timestamp: currentSession.timestamp // Keep original timestamp
       };
       
-      // Save to sessionStorage (excluding large image data)
+      // Save to sessionStorage
       try {
         const key = `campaign_session_${slug}`;
-        const { userPhotoPreview, ...dataToStore } = newSession;
-        sessionStorage.setItem(key, JSON.stringify(dataToStore));
+        sessionStorage.setItem(key, JSON.stringify(newSession));
       } catch (error) {
         console.error('Error saving session:', error);
       }
