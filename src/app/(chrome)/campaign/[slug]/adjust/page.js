@@ -89,7 +89,8 @@ function CampaignAdjustContent() {
     };
     
     loadSession();
-  }, [slug, router, campaignSession]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [slug, router]);
 
   const initializeCanvas = useCallback(async () => {
     if (!campaign || !canvasRef.current || canvasInitializedRef.current) {
