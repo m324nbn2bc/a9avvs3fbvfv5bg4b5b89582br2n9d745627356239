@@ -1,16 +1,11 @@
 import { NextResponse } from 'next/server';
-import { verifyIdToken, adminDb, adminAuth } from '@/lib/firebaseAdmin';
+import { requireUser } from '@/middleware/userAuth';
+import { adminDb } from '@/lib/firebaseAdmin';
 
 export async function GET(request) {
   try {
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const token = authHeader.split('Bearer ')[1];
-    const decodedToken = await verifyIdToken(token);
-    const userId = decodedToken.uid;
+    const user = await requireUser(request);
+    const userId = user.uid;
 
     const sessionsSnapshot = await adminDb
       .collection('users')
@@ -36,20 +31,17 @@ export async function GET(request) {
     return NextResponse.json({ success: true, sessions });
   } catch (error) {
     console.error('Error fetching sessions:', error);
+    if (error.message === 'Unauthorized' || error.message?.includes('token') || error.message === 'Account is banned') {
+      return NextResponse.json({ success: false, error: error.message }, { status: 401 });
+    }
     return NextResponse.json({ success: false, error: 'Failed to fetch sessions' }, { status: 500 });
   }
 }
 
 export async function POST(request) {
   try {
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const token = authHeader.split('Bearer ')[1];
-    const decodedToken = await verifyIdToken(token);
-    const userId = decodedToken.uid;
+    const user = await requireUser(request);
+    const userId = user.uid;
 
     const body = await request.json();
     const { sessionId, deviceType, browser, os, userAgent } = body;
@@ -101,20 +93,17 @@ export async function POST(request) {
     return NextResponse.json({ success: true, sessionId });
   } catch (error) {
     console.error('Error creating/updating session:', error);
+    if (error.message === 'Unauthorized' || error.message?.includes('token') || error.message === 'Account is banned') {
+      return NextResponse.json({ success: false, error: error.message }, { status: 401 });
+    }
     return NextResponse.json({ success: false, error: 'Failed to create session' }, { status: 500 });
   }
 }
 
 export async function DELETE(request) {
   try {
-    const authHeader = request.headers.get('authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const token = authHeader.split('Bearer ')[1];
-    const decodedToken = await verifyIdToken(token);
-    const userId = decodedToken.uid;
+    const user = await requireUser(request);
+    const userId = user.uid;
 
     const { searchParams } = new URL(request.url);
     const revokeAll = searchParams.get('all') === 'true';
@@ -134,18 +123,15 @@ export async function DELETE(request) {
 
       await batch.commit();
 
-      try {
-        await adminAuth.revokeRefreshTokens(userId);
-      } catch (revokeError) {
-        console.error('Error revoking refresh tokens:', revokeError);
-      }
-
-      return NextResponse.json({ success: true, message: 'All other sessions revoked', tokensRevoked: true });
+      return NextResponse.json({ success: true, message: 'All other sessions removed' });
     }
 
     return NextResponse.json({ success: false, error: 'Invalid request' }, { status: 400 });
   } catch (error) {
     console.error('Error revoking sessions:', error);
+    if (error.message === 'Unauthorized' || error.message?.includes('token') || error.message === 'Account is banned') {
+      return NextResponse.json({ success: false, error: error.message }, { status: 401 });
+    }
     return NextResponse.json({ success: false, error: 'Failed to revoke sessions' }, { status: 500 });
   }
 }

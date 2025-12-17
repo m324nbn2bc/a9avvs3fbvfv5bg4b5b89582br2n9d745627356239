@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { requireUser } from '@/middleware/userAuth';
 import { adminDb } from '@/lib/firebaseAdmin';
-import { FieldValue } from 'firebase-admin/firestore';
+import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 
 export async function POST(request) {
   try {
@@ -33,11 +33,12 @@ export async function POST(request) {
 
     const deletionDate = new Date();
     deletionDate.setDate(deletionDate.getDate() + 30);
+    const deletionTimestamp = Timestamp.fromDate(deletionDate);
 
     await userRef.update({
       accountDeletionRequested: true,
       accountDeletionRequestedAt: FieldValue.serverTimestamp(),
-      accountDeletionScheduledFor: deletionDate,
+      accountDeletionScheduledFor: deletionTimestamp,
       updatedAt: FieldValue.serverTimestamp(),
     });
 

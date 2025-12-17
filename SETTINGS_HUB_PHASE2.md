@@ -80,18 +80,21 @@ When a user requested account deletion, the flags were set but accounts were nev
 3. ✅ **Session tracking on auth restore:** `onAuthStateChanged` callback also tracks sessions for returning users
 4. ✅ **Session ID persistence:** localStorage stores session ID, cleared on logout
 5. ✅ **Device detection:** Extracts browser, OS, and device type from user agent
-6. ✅ **Firebase token revocation:** DELETE endpoints call `adminAuth.revokeRefreshTokens()` to actually invalidate other sessions
+6. ✅ **Session document removal:** DELETE endpoints remove session documents from Firestore (UI-level session management)
+   - Note: Firebase Auth doesn't support per-session token revocation; `revokeRefreshTokens()` invalidates ALL tokens for a user
+   - Removed `revokeRefreshTokens()` calls to avoid signing out the current user
 7. ✅ **API endpoints:**
    - `GET /api/settings/sessions` - List all active sessions
    - `POST /api/settings/sessions` - Create/update session on login
-   - `DELETE /api/settings/sessions?all=true` - Revoke all sessions except current (with token revocation)
-   - `DELETE /api/settings/sessions/[sessionId]` - Revoke specific session (with token revocation)
+   - `DELETE /api/settings/sessions?all=true` - Remove all other session documents
+   - `DELETE /api/settings/sessions/[sessionId]` - Remove specific session document
 8. ✅ **UI features:**
    - Session list with device icons (Desktop, Mobile, Tablet)
    - "Current" badge for active session
    - "Sign out" button per session
    - "Sign out all other devices" button
    - Relative time display (e.g., "2 hours ago")
+9. ✅ **Auth middleware:** All session routes now use `requireUser` middleware for consistent auth/banned checks
 
 ### Original Problem
 

@@ -13,6 +13,7 @@ The following improvements have been made to ensure consistency and maintainabil
   - Eliminates duplicated authentication logic across API routes
   - Provides consistent error handling and banned user checks
   - Reduces code duplication and improves maintainability
+  - **Updated:** Email sync and session management routes now also use `requireUser` (previously used manual token verification)
 - ✅ Standardized Firestore imports across all files
   - All files now use `adminDb` from `@/lib/firebaseAdmin` consistently
   - Removed usage of `adminFirestore()` function in favor of direct `adminDb` access
@@ -26,6 +27,13 @@ The following improvements have been made to ensure consistency and maintainabil
   - Renamed `showInLeaderboard` to `showInCreatorLeaderboard`
   - Renamed `allowSearchEngines` to `allowSearchEngineIndexing`
   - Simplified `handleToggle` function - no longer needs separate key mapping
+- ✅ Account deletion scheduled date now stored as Firestore Timestamp
+  - Changed from JS Date to `Timestamp.fromDate()` for type consistency
+  - Cron job already handles both formats gracefully
+- ✅ Session revocation simplified
+  - Removed `adminAuth.revokeRefreshTokens()` calls from session APIs
+  - Session removal now only deletes the session document from Firestore
+  - Note: Firebase doesn't support per-session token revocation; removing session documents provides UI-level session management
 
 ### Phase 1D Implementation Complete (December 17, 2025)
 
