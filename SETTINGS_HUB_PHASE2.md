@@ -13,11 +13,12 @@ This document outlines the remaining features for the Settings Hub that were def
 
 ---
 
-## 1. Account Deletion Cron Job
+## 1. Account Deletion Cron Job ✅ COMPLETED
 
 **Priority:** High  
 **Complexity:** Medium  
-**Current State:** Deletion is scheduled with 30-day grace period, but accounts are never actually deleted.
+**Status:** ✅ Implemented via Vercel Cron Job (December 17, 2025)  
+**Implementation:** `src/app/api/cron/process-account-deletions/route.js` with schedule `0 3 * * *` (daily at 3 AM UTC)
 
 ### Problem
 
