@@ -198,16 +198,13 @@ function CampaignUploadContent() {
                 <div className="space-y-3">
                   <h2 className="text-lg font-bold text-gray-900">Campaign Preview</h2>
                   
-                  <div className="relative w-full rounded-lg border-2 border-gray-300 overflow-hidden" style={{ maxHeight: '500px' }}>
-                    <div className="relative w-full" style={{ paddingBottom: '100%' }}>
-                      <Image
-                        src={getCampaignPreview(campaign.imageUrl)}
-                        alt={campaign.title}
-                        fill
-                        className="object-contain"
-                        unoptimized
-                      />
-                    </div>
+                  <div className="relative w-full rounded-lg border-2 border-gray-300">
+                    <img
+                      src={getCampaignPreview(campaign.imageUrl)}
+                      alt={campaign.title}
+                      className="w-full h-auto rounded-lg"
+                      style={{ maxHeight: '500px', objectFit: 'contain' }}
+                    />
                     <div className="absolute top-4 right-4 bg-emerald-500 text-white px-3 py-1 rounded-full text-xs font-semibold uppercase">
                       {campaign.type === 'frame' ? 'Frame' : 'Background'}
                     </div>
