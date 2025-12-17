@@ -1,19 +1,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useOptionalAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth";
 import SettingsSection from "@/components/settings/SettingsSection";
 import SettingsCard from "@/components/settings/SettingsCard";
 import SettingsToggle from "@/components/settings/SettingsToggle";
 
 export default function PrivacySettingsPage() {
-  const authContext = useOptionalAuth();
-  const user = authContext?.user || null;
+  const { user } = useAuth();
 
   const [settings, setSettings] = useState({
     profileVisibility: true,
-    showInLeaderboard: true,
-    allowSearchEngines: true,
+    showInCreatorLeaderboard: true,
+    allowSearchEngineIndexing: true,
     showSupportCount: true
   });
   const [loading, setLoading] = useState(true);
@@ -40,8 +39,8 @@ export default function PrivacySettingsPage() {
           if (data.success) {
             setSettings({
               profileVisibility: data.settings.profileVisibility === 'public',
-              showInLeaderboard: data.settings.showInCreatorLeaderboard,
-              allowSearchEngines: data.settings.allowSearchEngineIndexing,
+              showInCreatorLeaderboard: data.settings.showInCreatorLeaderboard,
+              allowSearchEngineIndexing: data.settings.allowSearchEngineIndexing,
               showSupportCount: data.settings.showSupportCount
             });
           }
@@ -56,7 +55,7 @@ export default function PrivacySettingsPage() {
     fetchSettings();
   }, [user]);
 
-  const handleToggle = async (key, apiKey) => {
+  const handleToggle = async (key) => {
     if (!user) return;
 
     const newValue = !settings[key];
@@ -80,7 +79,7 @@ export default function PrivacySettingsPage() {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          [apiKey]: key === 'profileVisibility' ? newValue : newValue
+          [key]: newValue
         })
       });
 
@@ -184,21 +183,21 @@ export default function PrivacySettingsPage() {
               label="Public Profile"
               description="Allow anyone to view your profile and campaigns"
               checked={settings.profileVisibility}
-              onChange={() => handleToggle("profileVisibility", "profileVisibility")}
+              onChange={() => handleToggle("profileVisibility")}
               disabled={saving}
             />
             <SettingsToggle
               label="Show in Creator Leaderboard"
               description="Display your profile on the top creators page"
-              checked={settings.showInLeaderboard}
-              onChange={() => handleToggle("showInLeaderboard", "showInCreatorLeaderboard")}
+              checked={settings.showInCreatorLeaderboard}
+              onChange={() => handleToggle("showInCreatorLeaderboard")}
               disabled={saving}
             />
             <SettingsToggle
               label="Show Support Count"
               description="Display the number of supporters on your campaigns"
               checked={settings.showSupportCount}
-              onChange={() => handleToggle("showSupportCount", "showSupportCount")}
+              onChange={() => handleToggle("showSupportCount")}
               disabled={saving}
             />
           </SettingsCard>
@@ -209,8 +208,8 @@ export default function PrivacySettingsPage() {
             <SettingsToggle
               label="Allow Search Engine Indexing"
               description="Let search engines like Google index your profile"
-              checked={settings.allowSearchEngines}
-              onChange={() => handleToggle("allowSearchEngines", "allowSearchEngineIndexing")}
+              checked={settings.allowSearchEngineIndexing}
+              onChange={() => handleToggle("allowSearchEngineIndexing")}
               disabled={saving}
             />
           </SettingsCard>

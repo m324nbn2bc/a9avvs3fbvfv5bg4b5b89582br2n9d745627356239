@@ -1,14 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useOptionalAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth";
 import SettingsSection from "@/components/settings/SettingsSection";
 import SettingsCard from "@/components/settings/SettingsCard";
 import ConfirmationModal from "@/components/ConfirmationModal";
 
 export default function AccountSettingsPage() {
-  const authContext = useOptionalAuth();
-  const user = authContext?.user || null;
+  const { user } = useAuth();
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: "",
     newPassword: "",
@@ -351,7 +350,7 @@ export default function AccountSettingsPage() {
         confirmText={deleteLoading ? "Processing..." : "Delete Account"}
         cancelText="Cancel"
         type="danger"
-        requireTypedConfirmation={false}
+        requireTypedConfirmation={true}
       />
     </div>
   );

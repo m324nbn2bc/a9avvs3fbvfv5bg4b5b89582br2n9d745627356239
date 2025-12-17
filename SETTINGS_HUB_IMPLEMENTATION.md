@@ -16,6 +16,16 @@ The following improvements have been made to ensure consistency and maintainabil
 - ✅ Standardized Firestore imports across all files
   - All files now use `adminDb` from `@/lib/firebaseAdmin` consistently
   - Removed usage of `adminFirestore()` function in favor of direct `adminDb` access
+- ✅ All Settings pages now use `useAuth` hook (not `useOptionalAuth`)
+  - Consistent with other protected pages like `/profile/edit`, `/admin/*`, `/create/*`
+  - Settings layout uses `useAuth` and `useUserProfile` for consistency
+- ✅ Account deletion requires typed confirmation ("CONFIRM")
+  - Added `requireTypedConfirmation={true}` to ConfirmationModal for account deletion
+  - Provides additional safety layer against accidental account deletion
+- ✅ Privacy page state keys now match API keys exactly
+  - Renamed `showInLeaderboard` to `showInCreatorLeaderboard`
+  - Renamed `allowSearchEngines` to `allowSearchEngineIndexing`
+  - Simplified `handleToggle` function - no longer needs separate key mapping
 
 ### Phase 1D Implementation Complete (December 17, 2025)
 

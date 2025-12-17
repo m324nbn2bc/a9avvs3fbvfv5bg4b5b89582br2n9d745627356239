@@ -2,18 +2,14 @@
 
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useOptionalAuth } from "@/hooks/useAuth";
-import { useOptionalUserProfile } from "@/components/UserProfileProvider";
+import { useAuth } from "@/hooks/useAuth";
+import { useUserProfile } from "@/components/UserProfileProvider";
 import SettingsSidebar from "@/components/settings/SettingsSidebar";
 
 export default function SettingsLayout({ children }) {
   const router = useRouter();
-  const authContext = useOptionalAuth();
-  const user = authContext?.user || null;
-  const authLoading = authContext?.loading || false;
-  const profileContext = useOptionalUserProfile();
-  const userProfile = profileContext?.userProfile || null;
-  const profileLoading = profileContext?.loading || false;
+  const { user, loading: authLoading } = useAuth();
+  const { userProfile, loading: profileLoading } = useUserProfile();
   
   useEffect(() => {
     if (!authLoading && !user) {

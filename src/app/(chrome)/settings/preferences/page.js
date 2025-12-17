@@ -1,13 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useOptionalAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/hooks/useAuth";
 import SettingsSection from "@/components/settings/SettingsSection";
 import SettingsCard from "@/components/settings/SettingsCard";
 
 export default function PreferencesPage() {
-  const authContext = useOptionalAuth();
-  const user = authContext?.user || null;
+  const { user } = useAuth();
 
   const [theme, setTheme] = useState("system");
   const [language, setLanguage] = useState("en");
