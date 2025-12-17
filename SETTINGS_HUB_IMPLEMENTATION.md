@@ -1,6 +1,7 @@
 # Settings Hub Implementation Plan
 
 **Created:** December 13, 2025  
+**Updated:** December 17, 2025  
 **Status:** Ready for Implementation  
 **Estimated Time:** 1-2 weeks  
 **Priority:** Phase 1
@@ -15,7 +16,7 @@ This document provides a detailed implementation plan for the Settings Hub featu
 - `/settings` - Main hub with sidebar navigation (redirects to `/settings/account`)
 - `/settings/account` - Account & Security management
 - `/settings/privacy` - Privacy & Data controls
-- `/settings/preferences` - User preferences (theme, language, etc.)
+- `/settings/preferences` - User preferences (theme placeholder, language)
 
 ### What This Does NOT Include
 - Notification preferences (notifications are mandatory for moderation)
@@ -43,11 +44,9 @@ src/app/(chrome)/settings/
 
 ```
 src/components/settings/
-├── SettingsSidebar.js  # Sidebar navigation (similar to AdminSidebar)
-├── SettingsHeader.js   # Header with breadcrumbs
+├── SettingsSidebar.js  # Sidebar navigation (similar to AdminSidebar but light theme)
 ├── SettingsCard.js     # Reusable settings section card
 ├── SettingsToggle.js   # Toggle switch component
-├── SettingsInput.js    # Input field with validation
 └── SettingsSection.js  # Section wrapper with title/description
 ```
 
@@ -55,17 +54,19 @@ src/components/settings/
 
 ```
 src/app/api/settings/
-├── account/
-│   ├── password/route.js       # Change password
-│   ├── email/route.js          # Update email
-│   ├── sessions/route.js       # Manage active sessions
-│   └── delete/route.js         # Delete account
 ├── privacy/
 │   ├── visibility/route.js     # Profile visibility settings
-│   ├── export/route.js         # Export user data (GDPR)
-│   └── indexing/route.js       # Search engine indexing
-└── preferences/
-    └── route.js                # Save user preferences
+│   └── export/route.js         # Export user data (GDPR)
+├── preferences/
+│   └── route.js                # Save user preferences
+└── account/
+    └── delete/route.js         # Delete account (mark for deletion)
+```
+
+### 2.4 Middleware
+
+```
+src/middleware/userAuth.js      # NEW: User authentication middleware (like adminAuth but for regular users)
 ```
 
 ---
@@ -90,24 +91,22 @@ src/app/api/settings/
   preferences: {
     theme: "light" | "dark" | "system",       // Default: "system"
     language: "en",                           // Default: "en"
-    timezone: "auto",                         // Default: "auto"
   },
   
-  // NEW: Security tracking
-  security: {
-    lastPasswordChange: timestamp,
-    twoFactorEnabled: false,                  // Future enhancement
-    activeSessions: [],                       // Future enhancement
-  },
+  // NEW: Account Deletion Tracking
+  accountDeletionRequested: false,            // Default: false
+  accountDeletionRequestedAt: null,           // Timestamp when deletion was requested
+  accountDeletionScheduledFor: null,          // Date when account will be permanently deleted
   
   // Existing fields remain unchanged
 }
 ```
 
-### 3.2 Sessions Collection (Future - for session management)
+### 3.2 Sessions Collection (Future Enhancement - Not in Phase 1)
 
 ```javascript
 // Firestore: `users/{userId}/sessions/{sessionId}`
+// DEFERRED: Session management for Phase 2
 {
   deviceInfo: string,       // Browser/device info
   ipAddress: string,        // Hashed IP
@@ -120,9 +119,131 @@ src/app/api/settings/
 
 ---
 
-## 4. Detailed Implementation Plan
+## 4. Critical Implementation Notes
 
-### 4.1 Phase 1A: Settings Layout & Navigation (2-3 days)
+### 4.1 Password Change - CLIENT-SIDE ONLY
+
+**IMPORTANT:** Password change MUST be done entirely on the client-side using Firebase Auth. Firebase requires `reauthenticateWithCredential()` before `updatePassword()`.
+
+**DO NOT create an API route for password change.** Use the Firebase Client SDK directly.
+
+```javascript
+// src/app/(chrome)/settings/account/page.js
+// Password change is handled CLIENT-SIDE using:
+
+import { 
+  getAuth, 
+  updatePassword, 
+  reauthenticateWithCredential, 
+  EmailAuthProvider 
+} from "firebase/auth";
+
+async function handlePasswordChange(currentPassword, newPassword) {
+  const auth = getAuth();
+  const user = auth.currentUser;
+
+  // Step 1: Create credential with current password
+  const credential = EmailAuthProvider.credential(
+    user.email,
+    currentPassword
+  );
+
+  // Step 2: Reauthenticate (required by Firebase for sensitive operations)
+  await reauthenticateWithCredential(user, credential);
+
+  // Step 3: Update password
+  await updatePassword(user, newPassword);
+}
+```
+
+**Error Codes to Handle:**
+- `auth/wrong-password` - Current password is incorrect
+- `auth/weak-password` - New password is too weak (min 6 chars)
+- `auth/requires-recent-login` - User needs to sign in again
+
+### 4.2 Email Change - Also CLIENT-SIDE
+
+Email change also requires reauthentication and uses `updateEmail()` from Firebase Auth client SDK.
+
+```javascript
+import { updateEmail, reauthenticateWithCredential, EmailAuthProvider } from "firebase/auth";
+
+async function handleEmailChange(currentPassword, newEmail) {
+  const auth = getAuth();
+  const user = auth.currentUser;
+
+  // Reauthenticate first
+  const credential = EmailAuthProvider.credential(user.email, currentPassword);
+  await reauthenticateWithCredential(user, credential);
+
+  // Update email (Firebase sends verification to new email)
+  await updateEmail(user, newEmail);
+}
+```
+
+### 4.3 User Authentication Middleware
+
+Create a new middleware for user routes (similar to `src/middleware/adminAuth.js`):
+
+**File:** `src/middleware/userAuth.js`
+
+```javascript
+import 'server-only';
+import { adminAuth, adminFirestore } from '@/lib/firebaseAdmin';
+
+export async function requireUser(request) {
+  try {
+    const authHeader = request.headers.get('authorization');
+    
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      throw new Error('No authorization token provided');
+    }
+    
+    const idToken = authHeader.split('Bearer ')[1];
+    
+    if (!idToken) {
+      throw new Error('Invalid authorization token format');
+    }
+    
+    const decodedToken = await adminAuth.verifyIdToken(idToken);
+    
+    if (!decodedToken || !decodedToken.uid) {
+      throw new Error('Invalid token');
+    }
+    
+    const db = adminFirestore();
+    const userDoc = await db.collection('users').doc(decodedToken.uid).get();
+    
+    if (!userDoc.exists) {
+      throw new Error('User not found');
+    }
+    
+    const userData = userDoc.data();
+    
+    // Check if user is banned
+    if (userData.accountStatus?.includes('banned')) {
+      throw new Error('Account is banned');
+    }
+    
+    return {
+      uid: decodedToken.uid,
+      email: decodedToken.email,
+      ...userData
+    };
+  } catch (error) {
+    if (process.env.NODE_ENV === 'development') {
+      console.error('User auth error:', error);
+    }
+    throw new Error(error.message || 'Unauthorized');
+  }
+}
+```
+
+---
+
+## 5. Detailed Implementation Plan
+
+### 5.1 Phase 1A: Settings Layout & Navigation (2-3 days)
 
 #### Task 1: Create Settings Layout
 **File:** `src/app/(chrome)/settings/layout.js`
@@ -157,7 +278,7 @@ export default function SettingsLayout({ children }) {
   }
   
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-20">
         <div className="flex flex-col lg:flex-row gap-8">
           <SettingsSidebar user={{ ...user, ...userProfile }} />
@@ -175,7 +296,7 @@ export default function SettingsLayout({ children }) {
 **File:** `src/components/settings/SettingsSidebar.js`
 
 **Design Pattern:** Follow `AdminSidebar.js` structure but with:
-- Light theme (not dark like admin)
+- Light theme (white background, not dark like admin)
 - Vertical layout for desktop, horizontal tabs for mobile
 - Active state with emerald color
 - Icons from existing SVG patterns
@@ -187,7 +308,7 @@ const navItems = [
     name: "Account & Security",
     href: "/settings/account",
     icon: LockIcon,
-    description: "Password, email, sessions"
+    description: "Password, email, delete account"
   },
   {
     name: "Privacy & Data",
@@ -220,29 +341,51 @@ export const metadata = {
 };
 ```
 
+#### Task 4: Add Settings Link to MobileMenu
+**File:** `src/components/MobileMenu.js`
+
+Add Settings link after Profile link for authenticated users:
+
+```javascript
+// After the Profile link (around line 112)
+<div className="py-2 px-4">
+  <a 
+    href="/settings"
+    className="flex items-center gap-3 py-2 px-3 text-base font-normal text-gray-800 hover:bg-emerald-50 hover:text-emerald-700 rounded-lg transition-colors duration-200"
+  >
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+    </svg>
+    Settings
+  </a>
+</div>
+```
+
 ---
 
-### 4.2 Phase 1B: Account & Security Page (3-4 days)
+### 5.2 Phase 1B: Account & Security Page (3-4 days)
 
-#### Task 4: Create Account Settings Page
+#### Task 5: Create Account Settings Page
 **File:** `src/app/(chrome)/settings/account/page.js`
 
 **Sections:**
-1. **Email Management**
-   - Display current email (read-only with edit button)
-   - Email change flow with verification
+1. **Email Display** (Read-only)
+   - Display current email
+   - Note: Email change is complex, defer to Phase 2
 
-2. **Password Management**
-   - Current password verification
+2. **Password Management** (Client-side Firebase Auth)
+   - Current password field
    - New password with strength indicator
    - Confirm password
+   - Uses `reauthenticateWithCredential` + `updatePassword`
 
-3. **Active Sessions** (Phase 2 - placeholder for now)
-   - List of active sessions with device info
-   - "Sign out all devices" button
+3. **Active Sessions** (Placeholder for Phase 2)
+   - Show "Coming Soon" message
+   - Will list active sessions with device info
 
 4. **Account Deletion**
-   - Danger zone section
+   - Danger zone section (red border)
    - Confirmation modal with typed confirmation ("DELETE")
    - 30-day grace period before permanent deletion
 
@@ -250,38 +393,93 @@ export const metadata = {
 - Yellow header with title
 - White content card with sections
 - Form validation with error messages
-- Success/error toasts
-
-#### Task 5: Create Password Change API
-**File:** `src/app/api/settings/account/password/route.js`
-
-```javascript
-import { NextResponse } from 'next/server';
-import { adminAuth } from '@/lib/firebaseAdmin';
-import { verifyIdToken } from '@/middleware/adminAuth';
-
-export async function POST(request) {
-  // 1. Verify user is authenticated
-  // 2. Verify current password
-  // 3. Validate new password strength
-  // 4. Update password via Firebase Admin SDK
-  // 5. Invalidate other sessions (optional)
-  // 6. Return success/error
-}
-```
+- Success/error feedback
+- Use `btn-base` + `btn-variant` for all buttons
 
 #### Task 6: Create Account Deletion API
 **File:** `src/app/api/settings/account/delete/route.js`
 
-**Deletion Process:**
-1. Verify user identity
-2. Mark account for deletion (30-day grace period)
-3. Send confirmation email
-4. Schedule cleanup cron job
+```javascript
+import { NextResponse } from 'next/server';
+import { requireUser } from '@/middleware/userAuth';
+import { adminFirestore } from '@/lib/firebaseAdmin';
+import { FieldValue } from 'firebase-admin/firestore';
+
+export async function POST(request) {
+  try {
+    const user = await requireUser(request);
+    
+    const body = await request.json();
+    const { confirmation } = body;
+    
+    if (confirmation !== 'DELETE') {
+      return NextResponse.json(
+        { success: false, error: 'Please type DELETE to confirm' },
+        { status: 400 }
+      );
+    }
+    
+    const db = adminFirestore();
+    const userRef = db.collection('users').doc(user.uid);
+    
+    // Calculate deletion date (30 days from now)
+    const deletionDate = new Date();
+    deletionDate.setDate(deletionDate.getDate() + 30);
+    
+    await userRef.update({
+      accountDeletionRequested: true,
+      accountDeletionRequestedAt: FieldValue.serverTimestamp(),
+      accountDeletionScheduledFor: deletionDate,
+    });
+    
+    // TODO: Send confirmation email
+    // TODO: Add cron job to process deletions
+    
+    return NextResponse.json({
+      success: true,
+      message: 'Account scheduled for deletion',
+      deletionDate: deletionDate.toISOString(),
+    });
+  } catch (error) {
+    console.error('Error requesting account deletion:', error);
+    return NextResponse.json(
+      { success: false, error: error.message || 'Failed to process request' },
+      { status: error.message === 'Unauthorized' ? 401 : 500 }
+    );
+  }
+}
+
+// Cancel deletion request
+export async function DELETE(request) {
+  try {
+    const user = await requireUser(request);
+    
+    const db = adminFirestore();
+    const userRef = db.collection('users').doc(user.uid);
+    
+    await userRef.update({
+      accountDeletionRequested: false,
+      accountDeletionRequestedAt: null,
+      accountDeletionScheduledFor: null,
+    });
+    
+    return NextResponse.json({
+      success: true,
+      message: 'Deletion request cancelled',
+    });
+  } catch (error) {
+    console.error('Error cancelling deletion:', error);
+    return NextResponse.json(
+      { success: false, error: error.message || 'Failed to cancel request' },
+      { status: error.message === 'Unauthorized' ? 401 : 500 }
+    );
+  }
+}
+```
 
 ---
 
-### 4.3 Phase 1C: Privacy & Data Page (2-3 days)
+### 5.3 Phase 1C: Privacy & Data Page (2-3 days)
 
 #### Task 7: Create Privacy Settings Page
 **File:** `src/app/(chrome)/settings/privacy/page.js`
@@ -297,74 +495,219 @@ export async function POST(request) {
 
 3. **Data Export (GDPR)**
    - Button: "Request Data Export"
-   - Generates JSON/ZIP with all user data
+   - Generates JSON with all user data
    - Includes: profile, campaigns, notifications
 
-4. **Connected Apps** (Future)
-   - Placeholder for OAuth connections
+4. **Connected Apps** (Placeholder for Phase 2)
+   - Show "Coming Soon" for OAuth connections
 
 #### Task 8: Create Privacy APIs
+
 **File:** `src/app/api/settings/privacy/visibility/route.js`
 
 ```javascript
+import { NextResponse } from 'next/server';
+import { requireUser } from '@/middleware/userAuth';
+import { adminFirestore } from '@/lib/firebaseAdmin';
+import { FieldValue } from 'firebase-admin/firestore';
+
 export async function PATCH(request) {
-  // 1. Verify authentication
-  // 2. Validate settings
-  // 3. Update user document
-  // 4. Return updated settings
+  try {
+    const user = await requireUser(request);
+    const body = await request.json();
+    
+    // Validate settings
+    const allowedSettings = [
+      'profileVisibility',
+      'showInCreatorLeaderboard', 
+      'allowSearchEngineIndexing',
+      'showSupportCount'
+    ];
+    
+    const updates = {};
+    for (const key of allowedSettings) {
+      if (body.hasOwnProperty(key)) {
+        updates[`privacySettings.${key}`] = body[key];
+      }
+    }
+    
+    if (Object.keys(updates).length === 0) {
+      return NextResponse.json(
+        { success: false, error: 'No valid settings to update' },
+        { status: 400 }
+      );
+    }
+    
+    const db = adminFirestore();
+    await db.collection('users').doc(user.uid).update({
+      ...updates,
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+    
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Error updating privacy settings:', error);
+    return NextResponse.json(
+      { success: false, error: error.message || 'Failed to update settings' },
+      { status: error.message === 'Unauthorized' ? 401 : 500 }
+    );
+  }
 }
 ```
 
 **File:** `src/app/api/settings/privacy/export/route.js`
 
 ```javascript
+import { NextResponse } from 'next/server';
+import { requireUser } from '@/middleware/userAuth';
+import { adminFirestore } from '@/lib/firebaseAdmin';
+
 export async function POST(request) {
-  // 1. Verify authentication
-  // 2. Gather all user data (profile, campaigns, notifications)
-  // 3. Generate JSON export
-  // 4. Return download link or initiate download
+  try {
+    const user = await requireUser(request);
+    
+    const db = adminFirestore();
+    
+    // Gather all user data
+    const userData = {};
+    
+    // 1. User profile
+    const userDoc = await db.collection('users').doc(user.uid).get();
+    userData.profile = userDoc.data();
+    
+    // 2. User campaigns
+    const campaignsSnapshot = await db.collection('campaigns')
+      .where('creatorId', '==', user.uid)
+      .get();
+    userData.campaigns = campaignsSnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    
+    // 3. User notifications (last 100)
+    const notificationsSnapshot = await db.collection('users')
+      .doc(user.uid)
+      .collection('notifications')
+      .orderBy('createdAt', 'desc')
+      .limit(100)
+      .get();
+    userData.notifications = notificationsSnapshot.docs.map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }));
+    
+    // 4. Export metadata
+    userData.exportMetadata = {
+      exportedAt: new Date().toISOString(),
+      userId: user.uid,
+      email: user.email,
+    };
+    
+    return NextResponse.json({
+      success: true,
+      data: userData,
+    });
+  } catch (error) {
+    console.error('Error exporting user data:', error);
+    return NextResponse.json(
+      { success: false, error: error.message || 'Failed to export data' },
+      { status: error.message === 'Unauthorized' ? 401 : 500 }
+    );
+  }
 }
 ```
 
 ---
 
-### 4.4 Phase 1D: Preferences Page (1-2 days)
+### 5.4 Phase 1D: Preferences Page (1-2 days)
 
 #### Task 9: Create Preferences Page
 **File:** `src/app/(chrome)/settings/preferences/page.js`
 
 **Sections:**
-1. **Appearance**
+1. **Appearance** (Placeholder)
    - Theme selector: Light / Dark / System
+   - Note: "Theme switching coming soon" - requires ThemeContext provider
 
 2. **Language** (Placeholder for i18n)
-   - Dropdown: English (more languages future)
+   - Dropdown: English (more languages in future)
 
-3. **Time Zone**
-   - Auto-detect or manual selection
-
-**Note:** Theme implementation requires:
-- CSS variables in `globals.css`
-- Theme context provider
+**Note:** Full theme implementation requires:
+- CSS variables in `globals.css` (partially exists with `prefers-color-scheme`)
+- ThemeContext provider
 - localStorage persistence
+- **Defer full implementation to Phase 2**
 
 #### Task 10: Create Preferences API
 **File:** `src/app/api/settings/preferences/route.js`
 
 ```javascript
+import { NextResponse } from 'next/server';
+import { requireUser } from '@/middleware/userAuth';
+import { adminFirestore } from '@/lib/firebaseAdmin';
+import { FieldValue } from 'firebase-admin/firestore';
+
 export async function PATCH(request) {
-  // 1. Verify authentication
-  // 2. Validate preferences
-  // 3. Update user document
-  // 4. Return updated preferences
+  try {
+    const user = await requireUser(request);
+    const body = await request.json();
+    
+    // Validate preferences
+    const allowedPreferences = ['theme', 'language'];
+    const validThemes = ['light', 'dark', 'system'];
+    const validLanguages = ['en']; // Add more as i18n is implemented
+    
+    const updates = {};
+    
+    if (body.theme) {
+      if (!validThemes.includes(body.theme)) {
+        return NextResponse.json(
+          { success: false, error: 'Invalid theme value' },
+          { status: 400 }
+        );
+      }
+      updates['preferences.theme'] = body.theme;
+    }
+    
+    if (body.language) {
+      if (!validLanguages.includes(body.language)) {
+        return NextResponse.json(
+          { success: false, error: 'Invalid language value' },
+          { status: 400 }
+        );
+      }
+      updates['preferences.language'] = body.language;
+    }
+    
+    if (Object.keys(updates).length === 0) {
+      return NextResponse.json(
+        { success: false, error: 'No valid preferences to update' },
+        { status: 400 }
+      );
+    }
+    
+    const db = adminFirestore();
+    await db.collection('users').doc(user.uid).update({
+      ...updates,
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+    
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Error updating preferences:', error);
+    return NextResponse.json(
+      { success: false, error: error.message || 'Failed to update preferences' },
+      { status: error.message === 'Unauthorized' ? 401 : 500 }
+    );
+  }
 }
 ```
 
 ---
 
-## 5. Reusable Components
+## 6. Reusable Components
 
-### 5.1 SettingsCard Component
+### 6.1 SettingsCard Component
 **File:** `src/components/settings/SettingsCard.js`
 
 ```javascript
@@ -383,7 +726,7 @@ export default function SettingsCard({ title, description, children, danger = fa
 }
 ```
 
-### 5.2 SettingsToggle Component
+### 6.2 SettingsToggle Component
 **File:** `src/components/settings/SettingsToggle.js`
 
 ```javascript
@@ -413,100 +756,119 @@ export default function SettingsToggle({ label, description, checked, onChange, 
 }
 ```
 
+### 6.3 SettingsSection Component
+**File:** `src/components/settings/SettingsSection.js`
+
+```javascript
+export default function SettingsSection({ title, description, children }) {
+  return (
+    <div className="mb-8">
+      <div className="mb-4">
+        <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
+        {description && <p className="text-sm text-gray-500 mt-1">{description}</p>}
+      </div>
+      <div className="space-y-4">
+        {children}
+      </div>
+    </div>
+  );
+}
+```
+
 ---
 
-## 6. Security Considerations
+## 7. Security Considerations
 
-### 6.1 Authentication Requirements
-- All settings pages require authentication
-- Password changes require current password verification
-- Account deletion requires typed confirmation + password
-- Email changes require re-authentication
+### 7.1 Authentication Requirements
+- All settings pages require authentication (enforced in layout)
+- Password changes require current password verification (client-side reauthentication)
+- Account deletion requires typed confirmation ("DELETE")
+- All API routes use Bearer token authentication
 
-### 6.2 Rate Limiting
+### 7.2 Rate Limiting (Phase 2)
 - Password change: 3 attempts per hour
-- Email change: 1 per 24 hours
 - Data export: 1 per 24 hours
 - Account deletion: 1 pending request at a time
 
-### 6.3 Audit Logging
+### 7.3 Audit Logging
 Log all sensitive actions to `users/{userId}/activityLog`:
-- Password changes
-- Email changes
+- Password changes (client-side, log via API call after success)
 - Privacy setting changes
 - Data exports
 - Account deletion requests
 
 ---
 
-## 7. UI/UX Consistency
+## 8. UI/UX Consistency
 
-### 7.1 Follow Existing Patterns
+### 8.1 Follow Existing Patterns
 - **Header Style:** Yellow background with emerald text (like `/profile/edit`)
 - **Card Style:** White with gray border, rounded-xl
 - **Button Style:** Use `btn-base` + variant classes from `BUTTON_STYLE_GUIDE.md`
 - **Form Validation:** Red border + error message below field
 - **Loading States:** Emerald spinner with message
-- **Success Feedback:** Green toast notification
+- **Success Feedback:** Green toast notification or inline message
 - **Danger Zone:** Red border, red header background
 
-### 7.2 Responsive Design
-- **Desktop:** Sidebar on left, content on right
-- **Tablet:** Sidebar collapses to icons
+### 8.2 Responsive Design
+- **Desktop:** Sidebar on left (256px), content on right
+- **Tablet:** Sidebar collapses to icons (80px)
 - **Mobile:** Horizontal tabs at top, content below
 
-### 7.3 Accessibility
+### 8.3 Accessibility
 - All toggles have proper `role="switch"` and `aria-checked`
 - Form fields have associated labels
 - Keyboard navigation support
-- Focus indicators on all interactive elements
+- Focus indicators on all interactive elements (handled by btn-base)
 
 ---
 
-## 8. Implementation Order
+## 9. Implementation Order
 
 ### Week 1: Foundation
-1. ✅ Create settings layout structure
-2. ✅ Create SettingsSidebar component
-3. ✅ Create reusable components (Card, Toggle, Input)
-4. ✅ Create Account page skeleton
-5. ✅ Implement password change functionality
+1. ✅ Create `src/middleware/userAuth.js` - User authentication middleware
+2. ✅ Create settings layout structure (`layout.js`, `page.js`)
+3. ✅ Create SettingsSidebar component
+4. ✅ Create reusable components (Card, Toggle, Section)
+5. ✅ Add Settings link to MobileMenu.js
+6. ✅ Create Account page with password change (client-side)
 
 ### Week 2: Core Features
-6. ✅ Implement email change functionality
 7. ✅ Create Privacy settings page
-8. ✅ Implement visibility toggles
-9. ✅ Implement data export
-10. ✅ Create Preferences page
-11. ✅ Add account deletion (with confirmation)
+8. ✅ Implement visibility toggles API
+9. ✅ Implement data export API
+10. ✅ Create Preferences page (theme placeholder)
+11. ✅ Add account deletion with confirmation
 
 ### Future Enhancements (Post-Launch)
 - Two-factor authentication (2FA)
 - Session management (view/revoke sessions)
-- Theme implementation (dark mode)
+- Full theme implementation (dark mode toggle)
 - Multi-language support (i18n)
 - Connected apps/OAuth management
+- Email change functionality
+- Account deletion cron job (add to `vercel.json`)
 
 ---
 
-## 9. Testing Checklist
+## 10. Testing Checklist
 
 ### Functional Tests
 - [ ] Settings layout loads correctly
 - [ ] Sidebar navigation works on all screen sizes
-- [ ] Password change with correct current password
+- [ ] Password change with correct current password (client-side)
 - [ ] Password change rejected with wrong current password
-- [ ] Email change triggers verification
 - [ ] Privacy toggles save correctly
 - [ ] Data export generates valid JSON
 - [ ] Account deletion shows proper confirmation
-- [ ] Preferences persist after page reload
+- [ ] Account deletion can be cancelled
+- [ ] Preferences save correctly
 
 ### Security Tests
 - [ ] Unauthenticated users redirected to signin
-- [ ] Rate limiting works on sensitive endpoints
+- [ ] API routes return 401 without valid token
 - [ ] Password validation enforces minimum requirements
-- [ ] Activity logging captures all actions
+- [ ] Banned users cannot access settings
 
 ### UI/UX Tests
 - [ ] Mobile responsive layout
@@ -514,13 +876,16 @@ Log all sensitive actions to `users/{userId}/activityLog`:
 - [ ] Error messages are clear and helpful
 - [ ] Success feedback shows after actions
 - [ ] Keyboard navigation works
+- [ ] All buttons use btn-base + btn-variant
 
 ---
 
-## 10. Files to Create/Modify
+## 11. Files to Create/Modify
 
 ### New Files
 ```
+src/middleware/userAuth.js                    # User authentication middleware
+
 src/app/(chrome)/settings/
 ├── layout.js
 ├── page.js
@@ -536,8 +901,6 @@ src/components/settings/
 
 src/app/api/settings/
 ├── account/
-│   ├── password/route.js
-│   ├── email/route.js
 │   └── delete/route.js
 ├── privacy/
 │   ├── visibility/route.js
@@ -547,37 +910,38 @@ src/app/api/settings/
 
 ### Modified Files
 ```
-src/lib/firestore.js         # Add settings update functions
-src/components/Header.js      # Add Settings link to user menu
-TASKS.md                      # Update Phase 1 status
-replit.md                     # Update with settings architecture
-CODEBASE_STRUCTURE.md         # Add settings files documentation
+src/components/MobileMenu.js    # Add Settings link after Profile
+TASKS.md                        # Update Phase 1 status
+replit.md                       # Update with settings architecture
+CODEBASE_STRUCTURE.md           # Add settings files documentation
 ```
 
 ---
 
-## 11. Dependencies
+## 12. Dependencies
 
 ### No New Packages Required
 All functionality can be built with existing dependencies:
-- Firebase Admin SDK (password management)
+- Firebase Client SDK (password change, email change)
+- Firebase Admin SDK (API authentication, Firestore operations)
 - Next.js API routes (backend)
 - Tailwind CSS (styling)
 - Existing component patterns
 
 ---
 
-## 12. Success Criteria
+## 13. Success Criteria
 
 Phase 1 is complete when:
 1. Users can access `/settings` and see the settings hub
-2. Users can change their password
+2. Users can change their password (client-side)
 3. Users can control profile visibility
 4. Users can export their data
-5. Users can access preferences (theme placeholder)
+5. Users can access preferences page (theme placeholder)
 6. Account deletion flow works with proper confirmation
 7. All pages are responsive and accessible
-8. Documentation is updated
+8. Settings link appears in mobile menu for authenticated users
+9. Documentation is updated
 
 ---
 
