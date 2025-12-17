@@ -6,6 +6,17 @@
 **Estimated Time:** 1-2 weeks  
 **Priority:** Phase 1
 
+### Code Quality Improvements (December 17, 2025)
+
+The following improvements have been made to ensure consistency and maintainability:
+- ✅ All Settings API routes now use the centralized `requireUser` middleware from `src/middleware/userAuth.js`
+  - Eliminates duplicated authentication logic across API routes
+  - Provides consistent error handling and banned user checks
+  - Reduces code duplication and improves maintainability
+- ✅ Standardized Firestore imports across all files
+  - All files now use `adminDb` from `@/lib/firebaseAdmin` consistently
+  - Removed usage of `adminFirestore()` function in favor of direct `adminDb` access
+
 ### Phase 1D Implementation Complete (December 17, 2025)
 
 The following items have been implemented:

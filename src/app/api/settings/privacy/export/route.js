@@ -1,38 +1,27 @@
 import { NextResponse } from 'next/server';
-import { adminAuth, adminDb } from '@/lib/firebaseAdmin';
+import { requireUser } from '@/middleware/userAuth';
+import { adminDb } from '@/lib/firebaseAdmin';
 
 export async function POST(request) {
   try {
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const token = authHeader.split('Bearer ')[1];
-    const decodedToken = await adminAuth.verifyIdToken(token);
-    const userId = decodedToken.uid;
+    const user = await requireUser(request);
+    const userId = user.uid;
 
     const userData = {};
 
-    const userDoc = await adminDb.collection('users').doc(userId).get();
-    if (!userDoc.exists) {
-      return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
-    }
-
-    const userProfile = userDoc.data();
     userData.profile = {
-      id: userDoc.id,
-      username: userProfile.username,
-      displayName: userProfile.displayName,
-      email: userProfile.email,
-      bio: userProfile.bio,
-      country: userProfile.country,
-      profileImage: userProfile.profileImage,
-      bannerImage: userProfile.bannerImage,
-      createdAt: userProfile.createdAt?.toDate?.()?.toISOString() || null,
-      updatedAt: userProfile.updatedAt?.toDate?.()?.toISOString() || null,
-      privacySettings: userProfile.privacySettings || {},
-      preferences: userProfile.preferences || {},
+      id: userId,
+      username: user.username,
+      displayName: user.displayName,
+      email: user.email,
+      bio: user.bio,
+      country: user.country,
+      profileImage: user.profileImage,
+      bannerImage: user.bannerImage,
+      createdAt: user.createdAt?.toDate?.()?.toISOString() || null,
+      updatedAt: user.updatedAt?.toDate?.()?.toISOString() || null,
+      privacySettings: user.privacySettings || {},
+      preferences: user.preferences || {},
     };
 
     const campaignsSnapshot = await adminDb.collection('campaigns')
@@ -77,7 +66,7 @@ export async function POST(request) {
     userData.exportMetadata = {
       exportedAt: new Date().toISOString(),
       userId: userId,
-      email: decodedToken.email,
+      email: user.email,
       dataIncluded: ['profile', 'campaigns', 'notifications'],
       version: '1.0',
     };
@@ -88,6 +77,9 @@ export async function POST(request) {
     });
   } catch (error) {
     console.error('Error exporting user data:', error);
+    if (error.message === 'Unauthorized' || error.message?.includes('token')) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
     return NextResponse.json(
       { success: false, error: 'Failed to export data' },
       { status: 500 }

@@ -1,5 +1,5 @@
 import 'server-only';
-import { adminAuth, adminFirestore } from '@/lib/firebaseAdmin';
+import { adminAuth, adminDb } from '@/lib/firebaseAdmin';
 
 export async function requireUser(request) {
   try {
@@ -21,8 +21,7 @@ export async function requireUser(request) {
       throw new Error('Invalid token');
     }
     
-    const db = adminFirestore();
-    const userDoc = await db.collection('users').doc(decodedToken.uid).get();
+    const userDoc = await adminDb.collection('users').doc(decodedToken.uid).get();
     
     if (!userDoc.exists) {
       throw new Error('User not found');
@@ -49,8 +48,7 @@ export async function requireUser(request) {
 
 export async function getUser(userId) {
   try {
-    const db = adminFirestore();
-    const userDoc = await db.collection('users').doc(userId).get();
+    const userDoc = await adminDb.collection('users').doc(userId).get();
     
     if (!userDoc.exists) {
       return null;

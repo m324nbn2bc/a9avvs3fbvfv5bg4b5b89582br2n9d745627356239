@@ -1,17 +1,12 @@
 import { NextResponse } from 'next/server';
-import { adminAuth, adminDb } from '@/lib/firebaseAdmin';
+import { requireUser } from '@/middleware/userAuth';
+import { adminDb } from '@/lib/firebaseAdmin';
 import { FieldValue } from 'firebase-admin/firestore';
 
 export async function POST(request) {
   try {
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const token = authHeader.split('Bearer ')[1];
-    const decodedToken = await adminAuth.verifyIdToken(token);
-    const userId = decodedToken.uid;
+    const user = await requireUser(request);
+    const userId = user.uid;
 
     const body = await request.json();
     const { confirmation } = body;
@@ -24,20 +19,13 @@ export async function POST(request) {
     }
 
     const userRef = adminDb.collection('users').doc(userId);
-    const userDoc = await userRef.get();
 
-    if (!userDoc.exists) {
-      return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
-    }
-
-    const userData = userDoc.data();
-
-    if (userData.accountDeletionRequested) {
+    if (user.accountDeletionRequested) {
       return NextResponse.json(
         { 
           success: false, 
           error: 'Account deletion already requested',
-          deletionDate: userData.accountDeletionScheduledFor?.toDate?.()?.toISOString() || null
+          deletionDate: user.accountDeletionScheduledFor?.toDate?.()?.toISOString() || null
         },
         { status: 400 }
       );
@@ -60,6 +48,9 @@ export async function POST(request) {
     });
   } catch (error) {
     console.error('Error requesting account deletion:', error);
+    if (error.message === 'Unauthorized' || error.message?.includes('token')) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
     return NextResponse.json(
       { success: false, error: 'Failed to process request' },
       { status: 500 }
@@ -69,25 +60,12 @@ export async function POST(request) {
 
 export async function DELETE(request) {
   try {
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const token = authHeader.split('Bearer ')[1];
-    const decodedToken = await adminAuth.verifyIdToken(token);
-    const userId = decodedToken.uid;
+    const user = await requireUser(request);
+    const userId = user.uid;
 
     const userRef = adminDb.collection('users').doc(userId);
-    const userDoc = await userRef.get();
 
-    if (!userDoc.exists) {
-      return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
-    }
-
-    const userData = userDoc.data();
-
-    if (!userData.accountDeletionRequested) {
+    if (!user.accountDeletionRequested) {
       return NextResponse.json(
         { success: false, error: 'No deletion request to cancel' },
         { status: 400 }
@@ -107,6 +85,9 @@ export async function DELETE(request) {
     });
   } catch (error) {
     console.error('Error cancelling deletion:', error);
+    if (error.message === 'Unauthorized' || error.message?.includes('token')) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
     return NextResponse.json(
       { success: false, error: 'Failed to cancel request' },
       { status: 500 }
@@ -116,31 +97,18 @@ export async function DELETE(request) {
 
 export async function GET(request) {
   try {
-    const authHeader = request.headers.get('Authorization');
-    if (!authHeader?.startsWith('Bearer ')) {
-      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
-    }
-
-    const token = authHeader.split('Bearer ')[1];
-    const decodedToken = await adminAuth.verifyIdToken(token);
-    const userId = decodedToken.uid;
-
-    const userRef = adminDb.collection('users').doc(userId);
-    const userDoc = await userRef.get();
-
-    if (!userDoc.exists) {
-      return NextResponse.json({ success: false, error: 'User not found' }, { status: 404 });
-    }
-
-    const userData = userDoc.data();
+    const user = await requireUser(request);
 
     return NextResponse.json({
       success: true,
-      deletionRequested: userData.accountDeletionRequested || false,
-      deletionScheduledFor: userData.accountDeletionScheduledFor?.toDate?.()?.toISOString() || null,
+      deletionRequested: user.accountDeletionRequested || false,
+      deletionScheduledFor: user.accountDeletionScheduledFor?.toDate?.()?.toISOString() || null,
     });
   } catch (error) {
     console.error('Error fetching deletion status:', error);
+    if (error.message === 'Unauthorized' || error.message?.includes('token')) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
     return NextResponse.json(
       { success: false, error: 'Failed to fetch status' },
       { status: 500 }
