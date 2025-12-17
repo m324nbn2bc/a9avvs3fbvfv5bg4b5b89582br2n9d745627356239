@@ -2,7 +2,7 @@
 
 **Created:** December 17, 2025  
 **Last Updated:** December 17, 2025  
-**Status:** In Progress (2 of 6 tasks completed)  
+**Status:** In Progress (3 of 6 tasks completed)  
 **Priority:** Phase 2  
 **Prerequisite:** Phase 1 Complete
 
@@ -148,56 +148,47 @@ Users can select light/dark/system theme in Preferences, and it saves correctly,
 
 ---
 
-## 4. Email Change
+## 4. Email Change ✅ COMPLETED
 
 **Priority:** Low  
 **Complexity:** Medium  
-**Current State:** Disabled with message "Email changes are not currently supported".
+**Status:** ✅ Implemented (December 17, 2025)
 
-### Problem
+### Implementation Summary
 
-Users cannot change their email address. This is a valid account management feature that some users may need.
+**Files Created/Modified:**
+- `src/app/api/settings/account/email/route.js` - API endpoint to sync email to Firestore
+- `src/app/(chrome)/settings/account/page.js` - Added email change form and handler
 
-### Implementation Requirements
+**Features Implemented:**
+1. ✅ **Reauthentication:** Requires current password before email change
+2. ✅ **Email verification:** Uses `verifyBeforeUpdateEmail()` - email only changes after user clicks verification link
+3. ✅ **Firestore sync:** API endpoint syncs from Firebase Auth (only updates if verification completed)
+4. ✅ **Google user detection:** Hides email change UI for Google-only accounts + backend guard
+5. ✅ **Form validation:** Email format validation, match confirmation, prevent same email
+6. ✅ **Error handling:** Comprehensive error messages for all Firebase Auth error codes
+7. ✅ **UI features:**
+   - Collapsible form (click "Change" to show)
+   - Current password, new email, confirm email fields
+   - Success message explaining verification email was sent
+   - Cancel button to dismiss form
 
-1. **Client-side implementation (Firebase Auth):**
-   ```javascript
-   import { updateEmail, reauthenticateWithCredential, EmailAuthProvider } from "firebase/auth";
+**Sync Approach:**
+- The API endpoint (`/api/settings/account/email`) reads the current email from Firebase Auth and syncs it to Firestore only if there's a mismatch
+- This endpoint is automatically called on every auth state change (via `onAuthStateChanged` in useAuth.js)
+- After user clicks verification link, their next page load or app visit triggers the sync
+- Uses `FieldValue.serverTimestamp()` for proper Firestore timestamp
 
-   async function handleEmailChange(currentPassword, newEmail) {
-     const auth = getAuth();
-     const user = auth.currentUser;
+**Error Codes Handled:**
+- `auth/wrong-password` / `auth/invalid-credential` - Incorrect password
+- `auth/email-already-in-use` - Email registered to another account
+- `auth/invalid-email` - Invalid email format
+- `auth/requires-recent-login` - Session too old
+- `auth/operation-not-allowed` - Feature disabled
 
-     // Step 1: Reauthenticate (required for sensitive operations)
-     const credential = EmailAuthProvider.credential(user.email, currentPassword);
-     await reauthenticateWithCredential(user, credential);
+### Original Problem
 
-     // Step 2: Update email (Firebase sends verification to new email)
-     await updateEmail(user, newEmail);
-     
-     // Step 3: Update Firestore user document
-     // ...update users/{uid} with new email
-   }
-   ```
-
-2. **UI updates for Account Settings page:**
-   - Add "Change Email" section
-   - Form with: current password, new email, confirm new email
-   - Show verification notice after change
-
-3. **Firestore sync:**
-   - Update `email` field in user document after successful change
-   - Handle the case where Firebase Auth email differs from Firestore
-
-4. **Error handling:**
-   - `auth/email-already-in-use` - New email already registered
-   - `auth/invalid-email` - Invalid email format
-   - `auth/requires-recent-login` - Need to reauthenticate
-
-5. **Considerations:**
-   - Firebase sends verification email to new address automatically
-   - Old email receives notification of change
-   - Consider requiring email verification before completing change
+Users could not change their email address. The UI showed "Email changes are not currently supported".
 
 ---
 

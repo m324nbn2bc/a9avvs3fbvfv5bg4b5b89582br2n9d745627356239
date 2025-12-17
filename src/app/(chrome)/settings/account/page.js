@@ -33,6 +33,26 @@ export default function AccountSettingsPage() {
   const [revokingSessionId, setRevokingSessionId] = useState(null);
   const [revokingAll, setRevokingAll] = useState(false);
 
+  const [emailForm, setEmailForm] = useState({
+    currentPassword: "",
+    newEmail: "",
+    confirmEmail: ""
+  });
+  const [emailError, setEmailError] = useState("");
+  const [emailSuccess, setEmailSuccess] = useState("");
+  const [emailLoading, setEmailLoading] = useState(false);
+  const [showEmailForm, setShowEmailForm] = useState(false);
+  const [isGoogleUser, setIsGoogleUser] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      const providerData = user.providerData || [];
+      const hasGoogleProvider = providerData.some(p => p.providerId === 'google.com');
+      const hasPasswordProvider = providerData.some(p => p.providerId === 'password');
+      setIsGoogleUser(hasGoogleProvider && !hasPasswordProvider);
+    }
+  }, [user]);
+
   useEffect(() => {
     const fetchDeletionStatus = async () => {
       if (!user) return;
@@ -258,6 +278,72 @@ export default function AccountSettingsPage() {
     }
   };
 
+  const handleEmailChange = async (e) => {
+    e.preventDefault();
+    setEmailError("");
+    setEmailSuccess("");
+
+    if (emailForm.newEmail !== emailForm.confirmEmail) {
+      setEmailError("Email addresses do not match");
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(emailForm.newEmail)) {
+      setEmailError("Please enter a valid email address");
+      return;
+    }
+
+    if (emailForm.newEmail === user?.email) {
+      setEmailError("New email must be different from your current email");
+      return;
+    }
+
+    setEmailLoading(true);
+
+    try {
+      const { getAuth, verifyBeforeUpdateEmail, reauthenticateWithCredential, EmailAuthProvider } = await import("firebase/auth");
+      const auth = getAuth();
+      const currentUser = auth.currentUser;
+
+      if (!currentUser || !currentUser.email) {
+        throw new Error("No user signed in");
+      }
+
+      const credential = EmailAuthProvider.credential(
+        currentUser.email,
+        emailForm.currentPassword
+      );
+
+      await reauthenticateWithCredential(currentUser, credential);
+      await verifyBeforeUpdateEmail(currentUser, emailForm.newEmail);
+
+      setEmailSuccess("A verification email has been sent to your new email address. Please click the link in that email to complete the change. Your email will only be updated after verification.");
+      setEmailForm({
+        currentPassword: "",
+        newEmail: "",
+        confirmEmail: ""
+      });
+      setShowEmailForm(false);
+    } catch (error) {
+      if (error.code === "auth/wrong-password" || error.code === "auth/invalid-credential") {
+        setEmailError("Current password is incorrect");
+      } else if (error.code === "auth/email-already-in-use") {
+        setEmailError("This email is already registered to another account");
+      } else if (error.code === "auth/invalid-email") {
+        setEmailError("Please enter a valid email address");
+      } else if (error.code === "auth/requires-recent-login") {
+        setEmailError("Please sign out and sign back in before changing your email");
+      } else if (error.code === "auth/operation-not-allowed") {
+        setEmailError("Email change is not allowed. Please contact support.");
+      } else {
+        setEmailError(error.message || "Failed to update email");
+      }
+    } finally {
+      setEmailLoading(false);
+    }
+  };
+
   const handleDeleteAccount = async () => {
     if (!user) return;
 
@@ -344,12 +430,110 @@ export default function AccountSettingsPage() {
       <div className="bg-white rounded-b-xl border border-t-0 border-gray-200 px-6 py-8 shadow-sm space-y-8">
         <SettingsSection title="Email Address" description="Your account email address">
           <SettingsCard title="Email">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-gray-900 font-medium">{user?.email || "No email"}</p>
-                <p className="text-sm text-gray-500 mt-1">Email changes are not currently supported</p>
+            {emailError && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm mb-4">
+                {emailError}
               </div>
-            </div>
+            )}
+            {emailSuccess && (
+              <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-green-600 text-sm mb-4">
+                {emailSuccess}
+              </div>
+            )}
+
+            {!showEmailForm ? (
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-900 font-medium">{user?.email || "No email"}</p>
+                  {isGoogleUser ? (
+                    <p className="text-sm text-gray-500 mt-1">Email is managed by Google and cannot be changed here</p>
+                  ) : (
+                    <p className="text-sm text-gray-500 mt-1">You can change your email address below</p>
+                  )}
+                </div>
+                {!isGoogleUser && (
+                  <button
+                    onClick={() => {
+                      setShowEmailForm(true);
+                      setEmailError("");
+                      setEmailSuccess("");
+                    }}
+                    className="text-sm text-emerald-600 hover:text-emerald-700 font-medium"
+                  >
+                    Change
+                  </button>
+                )}
+              </div>
+            ) : (
+              <form onSubmit={handleEmailChange} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Current Password
+                  </label>
+                  <input
+                    type="password"
+                    value={emailForm.currentPassword}
+                    onChange={(e) => setEmailForm(prev => ({ ...prev, currentPassword: e.target.value }))}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    required
+                    placeholder="Enter your current password"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    New Email Address
+                  </label>
+                  <input
+                    type="email"
+                    value={emailForm.newEmail}
+                    onChange={(e) => setEmailForm(prev => ({ ...prev, newEmail: e.target.value }))}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    required
+                    placeholder="Enter new email address"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Confirm New Email
+                  </label>
+                  <input
+                    type="email"
+                    value={emailForm.confirmEmail}
+                    onChange={(e) => setEmailForm(prev => ({ ...prev, confirmEmail: e.target.value }))}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    required
+                    placeholder="Confirm new email address"
+                  />
+                </div>
+
+                <p className="text-xs text-gray-500">
+                  A verification email will be sent to your new address. You must verify it to complete the change.
+                </p>
+
+                <div className="flex gap-3">
+                  <button
+                    type="submit"
+                    disabled={emailLoading}
+                    className="btn-base btn-primary py-2 px-4"
+                  >
+                    {emailLoading ? "Updating..." : "Update Email"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowEmailForm(false);
+                      setEmailForm({ currentPassword: "", newEmail: "", confirmEmail: "" });
+                      setEmailError("");
+                    }}
+                    className="btn-base btn-secondary py-2 px-4"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            )}
           </SettingsCard>
         </SettingsSection>
 

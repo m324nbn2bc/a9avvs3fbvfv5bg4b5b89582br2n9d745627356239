@@ -93,6 +93,19 @@ export function AuthProvider({ children }) {
                   ...deviceInfo
                 })
               });
+
+              // Sync email from Firebase Auth to Firestore (handles post-verification updates)
+              try {
+                await fetch('/api/settings/account/email', {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                  }
+                });
+              } catch (emailSyncError) {
+                // Email sync failures are not critical - user can manually sync later
+              }
             } catch (sessionError) {
               if (process.env.NODE_ENV === 'development') {
                 console.error('Error tracking session:', sessionError);
