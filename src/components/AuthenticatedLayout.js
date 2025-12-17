@@ -13,9 +13,14 @@ export default function AuthenticatedLayout({ children }) {
   
 
   // Only show loading state when Firebase is configured and initializing
-  // If Firebase is not configured, render children immediately without blocking
+  // If Firebase is not configured, still provide UserProfileProvider wrapper
+  // to avoid breaking components that use useOptionalUserProfile
   if (!isConfigured || isLoading) {
-    return children;
+    return (
+      <UserProfileProvider>
+        {children}
+      </UserProfileProvider>
+    );
   }
 
   // Firebase is configured - provide user profile context and onboarding wrapper
