@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import SettingsSection from "@/components/settings/SettingsSection";
 import SettingsCard from "@/components/settings/SettingsCard";
 import ConfirmationModal from "@/components/ConfirmationModal";
+import { getStoredSessionId } from "@/utils/sessionManager";
 
 export default function AccountSettingsPage() {
   const { user } = useAuth();
@@ -25,6 +26,12 @@ export default function AccountSettingsPage() {
     scheduledFor: null
   });
   const [cancelLoading, setCancelLoading] = useState(false);
+
+  const [sessions, setSessions] = useState([]);
+  const [sessionsLoading, setSessionsLoading] = useState(true);
+  const [sessionsError, setSessionsError] = useState("");
+  const [revokingSessionId, setRevokingSessionId] = useState(null);
+  const [revokingAll, setRevokingAll] = useState(false);
 
   useEffect(() => {
     const fetchDeletionStatus = async () => {
@@ -54,6 +61,147 @@ export default function AccountSettingsPage() {
 
     fetchDeletionStatus();
   }, [user]);
+
+  useEffect(() => {
+    const fetchSessions = async () => {
+      if (!user) return;
+
+      setSessionsLoading(true);
+      setSessionsError("");
+
+      try {
+        const token = await user.getIdToken();
+        const response = await fetch('/api/settings/sessions', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          const currentSessionId = getStoredSessionId();
+          const sessionsWithCurrent = data.sessions.map(session => ({
+            ...session,
+            isCurrent: session.id === currentSessionId || session.isCurrent
+          }));
+          setSessions(sessionsWithCurrent);
+        } else {
+          setSessionsError(data.error || 'Failed to load sessions');
+        }
+      } catch (error) {
+        console.error('Error fetching sessions:', error);
+        setSessionsError('Failed to load sessions');
+      } finally {
+        setSessionsLoading(false);
+      }
+    };
+
+    fetchSessions();
+  }, [user]);
+
+  const handleRevokeSession = async (sessionId) => {
+    if (!user) return;
+
+    setRevokingSessionId(sessionId);
+
+    try {
+      const token = await user.getIdToken();
+      const response = await fetch(`/api/settings/sessions/${sessionId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setSessions(prev => prev.filter(s => s.id !== sessionId));
+      } else {
+        setSessionsError(data.error || 'Failed to revoke session');
+      }
+    } catch (error) {
+      console.error('Error revoking session:', error);
+      setSessionsError('Failed to revoke session');
+    } finally {
+      setRevokingSessionId(null);
+    }
+  };
+
+  const handleRevokeAllSessions = async () => {
+    if (!user) return;
+
+    setRevokingAll(true);
+
+    try {
+      const token = await user.getIdToken();
+      const currentSessionId = getStoredSessionId();
+      const response = await fetch(`/api/settings/sessions?all=true&currentSessionId=${currentSessionId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setSessions(prev => prev.filter(s => s.isCurrent));
+      } else {
+        setSessionsError(data.error || 'Failed to revoke sessions');
+      }
+    } catch (error) {
+      console.error('Error revoking sessions:', error);
+      setSessionsError('Failed to revoke sessions');
+    } finally {
+      setRevokingAll(false);
+    }
+  };
+
+  const formatSessionDate = (dateString) => {
+    if (!dateString) return 'Unknown';
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+    
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
+    });
+  };
+
+  const getDeviceIcon = (deviceType) => {
+    switch (deviceType?.toLowerCase()) {
+      case 'mobile':
+        return (
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+          </svg>
+        );
+      case 'tablet':
+        return (
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 18h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+          </svg>
+        );
+      default:
+        return (
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+          </svg>
+        );
+    }
+  };
 
   const handlePasswordChange = async (e) => {
     e.preventDefault();
@@ -273,13 +421,78 @@ export default function AccountSettingsPage() {
 
         <SettingsSection title="Active Sessions" description="Manage your logged in devices">
           <SettingsCard title="Sessions">
-            <div className="text-center py-8 text-gray-500">
-              <svg className="w-12 h-12 mx-auto text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-              </svg>
-              <p className="font-medium">Session management coming soon</p>
-              <p className="text-sm mt-1">You'll be able to view and manage active sessions</p>
-            </div>
+            {sessionsError && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm mb-4">
+                {sessionsError}
+              </div>
+            )}
+
+            {sessionsLoading ? (
+              <div className="text-center py-8 text-gray-500">
+                <div className="animate-spin w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full mx-auto mb-3"></div>
+                <p className="text-sm">Loading sessions...</p>
+              </div>
+            ) : sessions.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                <svg className="w-12 h-12 mx-auto text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                </svg>
+                <p className="font-medium">No active sessions</p>
+                <p className="text-sm mt-1">Your session history will appear here after signing in</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="divide-y divide-gray-100">
+                  {sessions.map((session) => (
+                    <div key={session.id} className="py-3 first:pt-0 last:pb-0">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex items-start gap-3">
+                          <div className={`p-2 rounded-lg ${session.isCurrent ? 'bg-emerald-100 text-emerald-600' : 'bg-gray-100 text-gray-500'}`}>
+                            {getDeviceIcon(session.deviceType)}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <p className="font-medium text-gray-900">
+                                {session.browser} on {session.os}
+                              </p>
+                              {session.isCurrent && (
+                                <span className="px-2 py-0.5 text-xs font-medium bg-emerald-100 text-emerald-700 rounded-full">
+                                  Current
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-sm text-gray-500 mt-0.5">
+                              {session.deviceType} • Last active {formatSessionDate(session.lastActiveAt)}
+                            </p>
+                          </div>
+                        </div>
+                        {!session.isCurrent && (
+                          <button
+                            onClick={() => handleRevokeSession(session.id)}
+                            disabled={revokingSessionId === session.id}
+                            className="text-sm text-red-600 hover:text-red-700 font-medium disabled:opacity-50"
+                          >
+                            {revokingSessionId === session.id ? 'Revoking...' : 'Sign out'}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {sessions.filter(s => !s.isCurrent).length > 0 && (
+                  <div className="pt-4 border-t border-gray-100">
+                    <button
+                      onClick={handleRevokeAllSessions}
+                      disabled={revokingAll}
+                      className="text-sm text-red-600 hover:text-red-700 font-medium disabled:opacity-50"
+                    >
+                      {revokingAll ? 'Signing out...' : 'Sign out all other devices'}
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </SettingsCard>
         </SettingsSection>
 

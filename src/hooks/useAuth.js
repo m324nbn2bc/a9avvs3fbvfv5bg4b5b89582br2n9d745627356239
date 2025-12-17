@@ -24,6 +24,13 @@ import {
   handleGoogleSignInError,
   getPasswordResetSuccessMessage 
 } from '../utils/firebaseErrorHandler';
+import { 
+  generateSessionId, 
+  getDeviceInfo, 
+  getStoredSessionId, 
+  storeSessionId,
+  clearSessionId 
+} from '../utils/sessionManager';
 
 // Create Auth Context
 const AuthContext = createContext(null);
@@ -60,6 +67,35 @@ export function AuthProvider({ children }) {
             } catch (error) {
               if (process.env.NODE_ENV === 'development') {
                 console.error('Error creating user profile:', error);
+              }
+            }
+            
+            // Track session for returning users (auth state restored from persistence)
+            try {
+              const token = await user.getIdToken();
+              let sessionId = getStoredSessionId();
+              
+              if (!sessionId) {
+                sessionId = generateSessionId();
+                storeSessionId(sessionId);
+              }
+              
+              const deviceInfo = getDeviceInfo();
+              
+              await fetch('/api/settings/sessions', {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${token}`,
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  sessionId,
+                  ...deviceInfo
+                })
+              });
+            } catch (sessionError) {
+              if (process.env.NODE_ENV === 'development') {
+                console.error('Error tracking session:', sessionError);
               }
             }
             
@@ -114,6 +150,34 @@ export function AuthProvider({ children }) {
     );
   }
 
+  const trackSession = async (user) => {
+    try {
+      const token = await user.getIdToken();
+      let sessionId = getStoredSessionId();
+      
+      if (!sessionId) {
+        sessionId = generateSessionId();
+        storeSessionId(sessionId);
+      }
+      
+      const deviceInfo = getDeviceInfo();
+      
+      await fetch('/api/settings/sessions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          sessionId,
+          ...deviceInfo
+        })
+      });
+    } catch (error) {
+      console.error('Error tracking session:', error);
+    }
+  };
+
   const signInWithGoogle = async () => {
     if (!firebase.isConfigured || !firebase.auth) {
       return { success: false, error: 'Authentication is not properly configured.' };
@@ -145,6 +209,9 @@ export function AuthProvider({ children }) {
           banned: true 
         };
       }
+      
+      // Track this login session
+      await trackSession(result.user);
       
       // User state will be automatically updated via onAuthStateChanged
       return { success: true };
@@ -215,6 +282,9 @@ export function AuthProvider({ children }) {
         };
       }
       
+      // Track this login session
+      await trackSession(result.user);
+      
       return { success: true };
     } catch (error) {
       // Use centralized error handling for sign-in
@@ -228,6 +298,8 @@ export function AuthProvider({ children }) {
       setLogoutInProgress(true);
       // Clear any pending signup state before signing out
       setPendingSignupUserId(null);
+      // Clear session ID from local storage
+      clearSessionId();
       await signOut(firebase.auth);
       // Use replace instead of push to prevent back button issues
       router.replace('/');

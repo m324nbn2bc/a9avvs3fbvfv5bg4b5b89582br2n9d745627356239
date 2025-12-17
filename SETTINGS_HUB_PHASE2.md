@@ -1,7 +1,8 @@
 # Settings Hub Phase 2 Implementation Plan
 
 **Created:** December 17, 2025  
-**Status:** Planning  
+**Last Updated:** December 17, 2025  
+**Status:** In Progress (2 of 6 tasks completed)  
 **Priority:** Phase 2  
 **Prerequisite:** Phase 1 Complete
 
@@ -17,96 +18,84 @@ This document outlines the remaining features for the Settings Hub that were def
 
 **Priority:** High  
 **Complexity:** Medium  
-**Status:** ✅ Implemented via Vercel Cron Job (December 17, 2025)  
-**Implementation:** `src/app/api/cron/process-account-deletions/route.js` with schedule `0 3 * * *` (daily at 3 AM UTC)
+**Status:** ✅ Implemented via Vercel Cron Job (December 17, 2025)
 
-### Problem
+### Implementation Summary
 
-When a user requests account deletion:
-- `accountDeletionRequested` is set to `true`
-- `accountDeletionScheduledFor` is set to 30 days from request
-- **Nothing actually processes and deletes accounts after the 30-day period**
+**Files Created/Modified:**
+- `src/app/api/cron/process-account-deletions/route.js` - Main cron job endpoint
+- `vercel.json` - Cron schedule configuration
 
-### Implementation Requirements
+**Configuration:**
+- **Schedule:** `0 3 * * *` (daily at 3 AM UTC)
+- **Path:** `/api/cron/process-account-deletions`
+- **Authorization:** `CRON_SECRET` environment variable (required in Vercel)
+- **Timeout:** 60 seconds max duration
 
-1. **Create a scheduled function/cron job** that runs daily to:
-   - Query users where `accountDeletionRequested === true` AND `accountDeletionScheduledFor <= now()`
-   - For each matching user:
-     - Delete all user campaigns from `campaigns` collection
-     - Delete all user notifications from `users/{userId}/notifications` subcollection
-     - Delete user document from `users` collection
-     - Delete user from Firebase Authentication using Admin SDK
-     - Log deletion for audit purposes
+**Features Implemented:**
+1. ✅ **Query eligible accounts:** Finds users where `accountDeletionRequested === true` AND `accountDeletionScheduledFor <= now()`
+2. ✅ **Delete user campaigns:** Removes all campaigns from `campaigns` collection where `creatorId === userId`
+3. ✅ **Delete notifications:** Removes all documents from `users/{userId}/notifications` subcollection
+4. ✅ **Delete user document:** Removes the user document from `users` collection
+5. ✅ **Delete Firebase Auth user:** Uses Admin SDK `adminAuth.deleteUser()` (handles `auth/user-not-found` gracefully)
+6. ✅ **Audit logging:** Uses `logAdminAction()` with action `account_deleted` for each deletion
+7. ✅ **Error handling:** Continues processing on individual failures, collects errors in response
 
-2. **Options for implementation:**
-   - Firebase Cloud Functions with scheduled trigger (`firebase-functions/v2/scheduler`)
-   - External cron service calling a secure API endpoint
-   - Replit's scheduled deployments
+**Response Format:**
+```json
+{
+  "success": true,
+  "processed": 5,
+  "campaignsDeleted": 12,
+  "deletedUsers": ["uid1", "uid2", ...],
+  "errors": [...],
+  "executedAt": "2025-12-17T03:00:00.000Z"
+}
+```
 
-3. **API endpoint needed:**
-   ```
-   POST /api/admin/process-deletions
-   ```
-   - Secured with admin authentication or secret key
-   - Called by cron job or Cloud Function
+### Original Problem
 
-4. **Considerations:**
-   - Send final email notification before deletion (optional)
-   - Handle partial failures gracefully
-   - Maintain deletion audit log
+When a user requested account deletion, the flags were set but accounts were never actually deleted after the 30-day grace period.
 
 ---
 
-## 2. Session Management
+## 2. Session Management ✅ COMPLETED
 
 **Priority:** Medium  
 **Complexity:** High  
-**Current State:** Shows "Coming Soon" placeholder in Account Settings UI.
+**Status:** ✅ Implemented (December 17, 2025)
 
-### Problem
+### Implementation Summary
 
-Users cannot view or manage their active login sessions. This is a security feature that allows users to:
-- See all devices/browsers where they're logged in
-- Revoke access from specific sessions
-- Sign out from all devices
+**Files Created/Modified:**
+- `src/utils/sessionManager.js` - Client-side session ID generation and localStorage management
+- `src/app/api/settings/sessions/route.js` - API endpoints for listing, creating sessions
+- `src/app/api/settings/sessions/[sessionId]/route.js` - API endpoint for revoking specific session
+- `src/hooks/useAuth.js` - Added session tracking on login (signInWithGoogle, signInWithEmail)
+- `src/app/(chrome)/settings/account/page.js` - Updated UI with full session management
 
-### Implementation Requirements
-
-1. **Database schema extension:**
-   ```javascript
-   // Firestore: `users/{userId}/sessions/{sessionId}`
-   {
-     deviceInfo: string,       // Browser/device user agent
-     ipAddress: string,        // Hashed or partial IP for privacy
-     location: string,         // Approximate location (city, country)
-     createdAt: timestamp,     // When session was created
-     lastActiveAt: timestamp,  // Last activity timestamp
-     isCurrent: boolean,       // Is this the current session
-   }
-   ```
-
-2. **Create session on login:**
-   - Modify `signInWithEmail`, `signInWithGoogle` to create session document
-   - Store session ID in client (localStorage or cookie)
-   - Include device fingerprinting for identification
-
-3. **API endpoints needed:**
-   ```
-   GET /api/settings/sessions          - List all active sessions
-   DELETE /api/settings/sessions/:id   - Revoke specific session
-   DELETE /api/settings/sessions       - Revoke all sessions except current
-   ```
-
-4. **UI updates for Account Settings page:**
-   - Replace "Coming Soon" placeholder with session list
-   - Show device type icon, location, last active time
+**Features Implemented:**
+1. ✅ **Database schema:** Firestore subcollection `users/{userId}/sessions/{sessionId}` with deviceType, browser, os, userAgent, location, createdAt, lastActiveAt, isCurrent
+2. ✅ **Session tracking on login:** Both `signInWithGoogle` and `signInWithEmail` now create/update session documents
+3. ✅ **Session tracking on auth restore:** `onAuthStateChanged` callback also tracks sessions for returning users
+4. ✅ **Session ID persistence:** localStorage stores session ID, cleared on logout
+5. ✅ **Device detection:** Extracts browser, OS, and device type from user agent
+6. ✅ **Firebase token revocation:** DELETE endpoints call `adminAuth.revokeRefreshTokens()` to actually invalidate other sessions
+7. ✅ **API endpoints:**
+   - `GET /api/settings/sessions` - List all active sessions
+   - `POST /api/settings/sessions` - Create/update session on login
+   - `DELETE /api/settings/sessions?all=true` - Revoke all sessions except current (with token revocation)
+   - `DELETE /api/settings/sessions/[sessionId]` - Revoke specific session (with token revocation)
+8. ✅ **UI features:**
+   - Session list with device icons (Desktop, Mobile, Tablet)
+   - "Current" badge for active session
    - "Sign out" button per session
    - "Sign out all other devices" button
+   - Relative time display (e.g., "2 hours ago")
 
-5. **Considerations:**
-   - Firebase Auth has `revokeRefreshTokens()` for server-side session revocation
-   - Need to track sessions independently since Firebase doesn't expose session list
-   - Consider using Firebase Auth custom claims or separate tracking
+### Original Problem
+
+Users could not view or manage their active login sessions.
 
 ---
 
