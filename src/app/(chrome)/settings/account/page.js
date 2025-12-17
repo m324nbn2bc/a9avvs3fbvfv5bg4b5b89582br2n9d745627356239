@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useOptionalAuth } from "@/hooks/useAuth";
 import SettingsSection from "@/components/settings/SettingsSection";
 import SettingsCard from "@/components/settings/SettingsCard";
+import ConfirmationModal from "@/components/ConfirmationModal";
 
 export default function AccountSettingsPage() {
   const authContext = useOptionalAuth();
@@ -16,6 +17,44 @@ export default function AccountSettingsPage() {
   const [passwordError, setPasswordError] = useState("");
   const [passwordSuccess, setPasswordSuccess] = useState("");
   const [passwordLoading, setPasswordLoading] = useState(false);
+
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
+  const [deletionStatus, setDeletionStatus] = useState({
+    requested: false,
+    scheduledFor: null
+  });
+  const [cancelLoading, setCancelLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchDeletionStatus = async () => {
+      if (!user) return;
+
+      try {
+        const token = await user.getIdToken();
+        const response = await fetch('/api/settings/account/delete', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success) {
+            setDeletionStatus({
+              requested: data.deletionRequested,
+              scheduledFor: data.deletionScheduledFor
+            });
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching deletion status:', error);
+      }
+    };
+
+    fetchDeletionStatus();
+  }, [user]);
 
   const handlePasswordChange = async (e) => {
     e.preventDefault();
@@ -70,6 +109,82 @@ export default function AccountSettingsPage() {
     } finally {
       setPasswordLoading(false);
     }
+  };
+
+  const handleDeleteAccount = async () => {
+    if (!user) return;
+
+    setDeleteLoading(true);
+    setDeleteError("");
+
+    try {
+      const token = await user.getIdToken();
+      const response = await fetch('/api/settings/account/delete', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ confirmation: 'DELETE' })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setDeletionStatus({
+          requested: true,
+          scheduledFor: data.deletionDate
+        });
+        setDeleteModalOpen(false);
+      } else {
+        setDeleteError(data.error || 'Failed to request account deletion');
+      }
+    } catch (error) {
+      console.error('Error requesting account deletion:', error);
+      setDeleteError('Failed to request account deletion. Please try again.');
+    } finally {
+      setDeleteLoading(false);
+    }
+  };
+
+  const handleCancelDeletion = async () => {
+    if (!user) return;
+
+    setCancelLoading(true);
+
+    try {
+      const token = await user.getIdToken();
+      const response = await fetch('/api/settings/account/delete', {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        setDeletionStatus({
+          requested: false,
+          scheduledFor: null
+        });
+      }
+    } catch (error) {
+      console.error('Error cancelling deletion:', error);
+    } finally {
+      setCancelLoading(false);
+    }
+  };
+
+  const formatDeletionDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
   };
 
   return (
@@ -172,17 +287,72 @@ export default function AccountSettingsPage() {
         <SettingsSection title="Danger Zone" description="Irreversible actions">
           <SettingsCard title="Delete Account" danger>
             <div className="space-y-4">
-              <p className="text-sm text-gray-600">
-                Once you delete your account, there is no going back. Please be certain.
-                Your account will be scheduled for permanent deletion after 30 days.
-              </p>
-              <button className="btn-base btn-danger py-2 px-4">
-                Delete Account
-              </button>
+              {deleteError && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
+                  {deleteError}
+                </div>
+              )}
+
+              {deletionStatus.requested ? (
+                <div className="space-y-4">
+                  <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                    <div className="flex items-start gap-3">
+                      <svg className="w-5 h-5 text-red-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                      </svg>
+                      <div>
+                        <p className="font-medium text-red-800">Account Scheduled for Deletion</p>
+                        <p className="text-sm text-red-700 mt-1">
+                          Your account will be permanently deleted on{' '}
+                          <strong>{formatDeletionDate(deletionStatus.scheduledFor)}</strong>.
+                        </p>
+                        <p className="text-sm text-red-600 mt-2">
+                          You can cancel this request at any time before the deletion date.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleCancelDeletion}
+                    disabled={cancelLoading}
+                    className="btn-base btn-secondary py-2 px-4"
+                  >
+                    {cancelLoading ? "Cancelling..." : "Cancel Deletion Request"}
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <p className="text-sm text-gray-600">
+                    Once you delete your account, there is no going back. Please be certain.
+                    Your account will be scheduled for permanent deletion after 30 days.
+                  </p>
+                  <button
+                    onClick={() => setDeleteModalOpen(true)}
+                    className="btn-base btn-danger py-2 px-4"
+                  >
+                    Delete Account
+                  </button>
+                </>
+              )}
             </div>
           </SettingsCard>
         </SettingsSection>
       </div>
+
+      <ConfirmationModal
+        isOpen={deleteModalOpen}
+        onClose={() => {
+          setDeleteModalOpen(false);
+          setDeleteError("");
+        }}
+        onConfirm={handleDeleteAccount}
+        title="Delete Your Account?"
+        message="This action will schedule your account for permanent deletion in 30 days. During this period, you can cancel the deletion request. After 30 days, all your data including campaigns, profile information, and activity will be permanently removed."
+        confirmText={deleteLoading ? "Processing..." : "Delete Account"}
+        cancelText="Cancel"
+        type="danger"
+        requireTypedConfirmation={false}
+      />
     </div>
   );
 }

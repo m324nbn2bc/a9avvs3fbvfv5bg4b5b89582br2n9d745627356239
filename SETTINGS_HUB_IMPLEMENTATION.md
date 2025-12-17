@@ -2,9 +2,22 @@
 
 **Created:** December 13, 2025  
 **Updated:** December 17, 2025  
-**Status:** Phase 1A Complete (Layout & Navigation)  
+**Status:** Phase 1B Complete (Account & Security)  
 **Estimated Time:** 1-2 weeks  
 **Priority:** Phase 1
+
+### Phase 1B Implementation Complete (December 17, 2025)
+
+The following items have been implemented:
+- ✅ Account Deletion API (`src/app/api/settings/account/delete/route.js`)
+  - POST: Request account deletion (30-day grace period)
+  - DELETE: Cancel deletion request
+  - GET: Check deletion status
+- ✅ Account Settings page updated with full deletion functionality
+  - Confirmation modal before deletion
+  - Shows pending deletion status with scheduled date
+  - Cancel deletion button when deletion is pending
+- ✅ Uses existing ConfirmationModal component for consistent UX
 
 ### Phase 1A Implementation Complete (December 17, 2025)
 
