@@ -458,7 +458,7 @@ export default function AccountSettingsPage() {
                       setEmailError("");
                       setEmailSuccess("");
                     }}
-                    className="text-sm text-emerald-600 hover:text-emerald-700 font-medium"
+                    className="text-sm text-emerald-600 hover:text-emerald-700 font-medium cursor-pointer"
                   >
                     Change
                   </button>
@@ -474,7 +474,7 @@ export default function AccountSettingsPage() {
                     type="password"
                     value={emailForm.currentPassword}
                     onChange={(e) => setEmailForm(prev => ({ ...prev, currentPassword: e.target.value }))}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all text-gray-900 placeholder-gray-500 text-sm"
                     required
                     placeholder="Enter your current password"
                   />
@@ -488,7 +488,7 @@ export default function AccountSettingsPage() {
                     type="email"
                     value={emailForm.newEmail}
                     onChange={(e) => setEmailForm(prev => ({ ...prev, newEmail: e.target.value }))}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all text-gray-900 placeholder-gray-500 text-sm"
                     required
                     placeholder="Enter new email address"
                   />
@@ -502,7 +502,7 @@ export default function AccountSettingsPage() {
                     type="email"
                     value={emailForm.confirmEmail}
                     onChange={(e) => setEmailForm(prev => ({ ...prev, confirmEmail: e.target.value }))}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all text-gray-900 placeholder-gray-500 text-sm"
                     required
                     placeholder="Confirm new email address"
                   />
@@ -559,8 +559,9 @@ export default function AccountSettingsPage() {
                   type="password"
                   value={passwordForm.currentPassword}
                   onChange={(e) => setPasswordForm(prev => ({ ...prev, currentPassword: e.target.value }))}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all text-gray-900 placeholder-gray-500 text-sm"
                   required
+                  placeholder="Enter your current password"
                 />
               </div>
 
@@ -572,9 +573,10 @@ export default function AccountSettingsPage() {
                   type="password"
                   value={passwordForm.newPassword}
                   onChange={(e) => setPasswordForm(prev => ({ ...prev, newPassword: e.target.value }))}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all text-gray-900 placeholder-gray-500 text-sm"
                   required
                   minLength={6}
+                  placeholder="Enter new password"
                 />
                 <p className="text-xs text-gray-500 mt-1">Minimum 6 characters</p>
               </div>
@@ -587,8 +589,9 @@ export default function AccountSettingsPage() {
                   type="password"
                   value={passwordForm.confirmPassword}
                   onChange={(e) => setPasswordForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all text-gray-900 placeholder-gray-500 text-sm"
                   required
+                  placeholder="Confirm new password"
                 />
               </div>
 
@@ -654,7 +657,7 @@ export default function AccountSettingsPage() {
                           <button
                             onClick={() => handleRevokeSession(session.id)}
                             disabled={revokingSessionId === session.id}
-                            className="text-sm text-red-600 hover:text-red-700 font-medium disabled:opacity-50"
+                            className="text-sm text-red-600 hover:text-red-700 font-medium disabled:opacity-50 cursor-pointer"
                           >
                             {revokingSessionId === session.id ? 'Revoking...' : 'Sign out'}
                           </button>
@@ -669,7 +672,7 @@ export default function AccountSettingsPage() {
                     <button
                       onClick={handleRevokeAllSessions}
                       disabled={revokingAll}
-                      className="text-sm text-red-600 hover:text-red-700 font-medium disabled:opacity-50"
+                      className="text-sm text-red-600 hover:text-red-700 font-medium disabled:opacity-50 cursor-pointer"
                     >
                       {revokingAll ? 'Signing out...' : 'Sign out all other devices'}
                     </button>

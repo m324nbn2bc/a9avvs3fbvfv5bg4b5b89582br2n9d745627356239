@@ -202,11 +202,11 @@ export default function PreferencesPage() {
                 value={language}
                 onChange={(e) => handleLanguageChange(e.target.value)}
                 disabled={saving}
-                className={`w-full max-w-xs px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 ${
-                  saving ? "opacity-50 cursor-not-allowed" : ""
+                className={`w-full max-w-xs px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all text-gray-900 bg-white text-sm ${
+                  saving ? "opacity-50 cursor-not-allowed" : "cursor-pointer"
                 }`}
               >
-                <option value="en">English</option>
+                <option value="en" className="text-gray-900">English</option>
               </select>
               <p className="text-xs text-gray-500 bg-yellow-50 p-3 rounded-lg">
                 Your language preference is saved. Additional languages coming soon.
