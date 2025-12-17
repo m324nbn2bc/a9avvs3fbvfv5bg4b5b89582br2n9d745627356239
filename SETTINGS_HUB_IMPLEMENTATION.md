@@ -2,9 +2,24 @@
 
 **Created:** December 13, 2025  
 **Updated:** December 17, 2025  
-**Status:** Phase 1B Complete (Account & Security)  
+**Status:** Phase 1C Complete (Privacy & Data)  
 **Estimated Time:** 1-2 weeks  
 **Priority:** Phase 1
+
+### Phase 1C Implementation Complete (December 17, 2025)
+
+The following items have been implemented:
+- ✅ Privacy Visibility API (`src/app/api/settings/privacy/visibility/route.js`)
+  - GET: Fetch current privacy settings
+  - PATCH: Update privacy settings (profileVisibility, showInCreatorLeaderboard, allowSearchEngineIndexing, showSupportCount)
+- ✅ Data Export API (`src/app/api/settings/privacy/export/route.js`)
+  - POST: Export all user data (profile, campaigns, notifications) as JSON
+  - GDPR-compliant data export functionality
+- ✅ Privacy Settings page updated with full functionality
+  - Loads settings from Firestore on page load
+  - Auto-saves on toggle with optimistic updates
+  - Shows save status feedback (success/error)
+  - Data export downloads JSON file directly
 
 ### Phase 1B Implementation Complete (December 17, 2025)
 
