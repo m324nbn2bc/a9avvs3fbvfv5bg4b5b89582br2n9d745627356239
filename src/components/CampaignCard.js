@@ -28,7 +28,7 @@ export default function CampaignCard({
                 src={getCampaignPreview(campaign.imageUrl)}
                 alt={campaign.title}
                 fill
-                className={`object-cover transition-all duration-300 ${
+                className={`object-contain transition-all duration-300 ${
                   imageLoading ? 'opacity-0' : 'opacity-100 group-hover:scale-105'
                 }`}
                 onLoadingComplete={() => setImageLoading(false)}
