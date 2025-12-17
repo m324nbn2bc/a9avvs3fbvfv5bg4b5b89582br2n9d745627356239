@@ -257,7 +257,7 @@ Create a new middleware for user routes (similar to `src/middleware/adminAuth.js
 
 ```javascript
 import 'server-only';
-import { adminAuth, adminFirestore } from '@/lib/firebaseAdmin';
+import { adminAuth, adminDb } from '@/lib/firebaseAdmin';
 
 export async function requireUser(request) {
   try {
@@ -279,8 +279,7 @@ export async function requireUser(request) {
       throw new Error('Invalid token');
     }
     
-    const db = adminFirestore();
-    const userDoc = await db.collection('users').doc(decodedToken.uid).get();
+    const userDoc = await adminDb.collection('users').doc(decodedToken.uid).get();
     
     if (!userDoc.exists) {
       throw new Error('User not found');
@@ -470,12 +469,13 @@ Add Settings link after Profile link for authenticated users:
 ```javascript
 import { NextResponse } from 'next/server';
 import { requireUser } from '@/middleware/userAuth';
-import { adminFirestore } from '@/lib/firebaseAdmin';
+import { adminDb } from '@/lib/firebaseAdmin';
 import { FieldValue } from 'firebase-admin/firestore';
 
 export async function POST(request) {
   try {
     const user = await requireUser(request);
+    const userId = user.uid;
     
     const body = await request.json();
     const { confirmation } = body;
@@ -487,8 +487,7 @@ export async function POST(request) {
       );
     }
     
-    const db = adminFirestore();
-    const userRef = db.collection('users').doc(user.uid);
+    const userRef = adminDb.collection('users').doc(userId);
     
     // Calculate deletion date (30 days from now)
     const deletionDate = new Date();
@@ -498,10 +497,8 @@ export async function POST(request) {
       accountDeletionRequested: true,
       accountDeletionRequestedAt: FieldValue.serverTimestamp(),
       accountDeletionScheduledFor: deletionDate,
+      updatedAt: FieldValue.serverTimestamp(),
     });
-    
-    // TODO: Send confirmation email
-    // TODO: Add cron job to process deletions
     
     return NextResponse.json({
       success: true,
@@ -510,9 +507,12 @@ export async function POST(request) {
     });
   } catch (error) {
     console.error('Error requesting account deletion:', error);
+    if (error.message === 'Unauthorized' || error.message?.includes('token')) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
     return NextResponse.json(
-      { success: false, error: error.message || 'Failed to process request' },
-      { status: error.message === 'Unauthorized' ? 401 : 500 }
+      { success: false, error: 'Failed to process request' },
+      { status: 500 }
     );
   }
 }
@@ -521,14 +521,15 @@ export async function POST(request) {
 export async function DELETE(request) {
   try {
     const user = await requireUser(request);
+    const userId = user.uid;
     
-    const db = adminFirestore();
-    const userRef = db.collection('users').doc(user.uid);
+    const userRef = adminDb.collection('users').doc(userId);
     
     await userRef.update({
       accountDeletionRequested: false,
       accountDeletionRequestedAt: null,
       accountDeletionScheduledFor: null,
+      updatedAt: FieldValue.serverTimestamp(),
     });
     
     return NextResponse.json({
@@ -537,9 +538,12 @@ export async function DELETE(request) {
     });
   } catch (error) {
     console.error('Error cancelling deletion:', error);
+    if (error.message === 'Unauthorized' || error.message?.includes('token')) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
     return NextResponse.json(
-      { success: false, error: error.message || 'Failed to cancel request' },
-      { status: error.message === 'Unauthorized' ? 401 : 500 }
+      { success: false, error: 'Failed to cancel request' },
+      { status: 500 }
     );
   }
 }
@@ -576,12 +580,13 @@ export async function DELETE(request) {
 ```javascript
 import { NextResponse } from 'next/server';
 import { requireUser } from '@/middleware/userAuth';
-import { adminFirestore } from '@/lib/firebaseAdmin';
+import { adminDb } from '@/lib/firebaseAdmin';
 import { FieldValue } from 'firebase-admin/firestore';
 
 export async function PATCH(request) {
   try {
     const user = await requireUser(request);
+    const userId = user.uid;
     const body = await request.json();
     
     // Validate settings
@@ -606,8 +611,8 @@ export async function PATCH(request) {
       );
     }
     
-    const db = adminFirestore();
-    await db.collection('users').doc(user.uid).update({
+    const userRef = adminDb.collection('users').doc(userId);
+    await userRef.update({
       ...updates,
       updatedAt: FieldValue.serverTimestamp(),
     });
@@ -615,9 +620,12 @@ export async function PATCH(request) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error('Error updating privacy settings:', error);
+    if (error.message === 'Unauthorized' || error.message?.includes('token')) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
     return NextResponse.json(
-      { success: false, error: error.message || 'Failed to update settings' },
-      { status: error.message === 'Unauthorized' ? 401 : 500 }
+      { success: false, error: 'Failed to update settings' },
+      { status: 500 }
     );
   }
 }
@@ -628,47 +636,78 @@ export async function PATCH(request) {
 ```javascript
 import { NextResponse } from 'next/server';
 import { requireUser } from '@/middleware/userAuth';
-import { adminFirestore } from '@/lib/firebaseAdmin';
+import { adminDb } from '@/lib/firebaseAdmin';
 
 export async function POST(request) {
   try {
     const user = await requireUser(request);
-    
-    const db = adminFirestore();
+    const userId = user.uid;
     
     // Gather all user data
     const userData = {};
     
-    // 1. User profile
-    const userDoc = await db.collection('users').doc(user.uid).get();
-    userData.profile = userDoc.data();
+    // 1. User profile (already fetched by requireUser)
+    userData.profile = {
+      id: userId,
+      username: user.username,
+      displayName: user.displayName,
+      email: user.email,
+      bio: user.bio,
+      country: user.country,
+      profileImage: user.profileImage,
+      bannerImage: user.bannerImage,
+      createdAt: user.createdAt?.toDate?.()?.toISOString() || null,
+      updatedAt: user.updatedAt?.toDate?.()?.toISOString() || null,
+      privacySettings: user.privacySettings || {},
+      preferences: user.preferences || {},
+    };
     
     // 2. User campaigns
-    const campaignsSnapshot = await db.collection('campaigns')
-      .where('creatorId', '==', user.uid)
+    const campaignsSnapshot = await adminDb.collection('campaigns')
+      .where('creatorId', '==', userId)
       .get();
-    userData.campaigns = campaignsSnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
+    userData.campaigns = campaignsSnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        title: data.title,
+        description: data.description,
+        slug: data.slug,
+        status: data.status,
+        moderationStatus: data.moderationStatus,
+        supportCount: data.supportCount,
+        downloadCount: data.downloadCount,
+        createdAt: data.createdAt?.toDate?.()?.toISOString() || null,
+        updatedAt: data.updatedAt?.toDate?.()?.toISOString() || null,
+      };
+    });
     
     // 3. User notifications (last 100)
-    const notificationsSnapshot = await db.collection('users')
-      .doc(user.uid)
+    const notificationsSnapshot = await adminDb.collection('users')
+      .doc(userId)
       .collection('notifications')
       .orderBy('createdAt', 'desc')
       .limit(100)
       .get();
-    userData.notifications = notificationsSnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }));
+    userData.notifications = notificationsSnapshot.docs.map(doc => {
+      const data = doc.data();
+      return {
+        id: doc.id,
+        type: data.type,
+        title: data.title,
+        message: data.message,
+        read: data.read,
+        createdAt: data.createdAt?.toDate?.()?.toISOString() || null,
+      };
+    });
     
     // 4. Export metadata
     userData.exportMetadata = {
       exportedAt: new Date().toISOString(),
-      userId: user.uid,
+      userId: userId,
       email: user.email,
+      dataIncluded: ['profile', 'campaigns', 'notifications'],
+      version: '1.0',
     };
     
     return NextResponse.json({
@@ -677,9 +716,12 @@ export async function POST(request) {
     });
   } catch (error) {
     console.error('Error exporting user data:', error);
+    if (error.message === 'Unauthorized' || error.message?.includes('token')) {
+      return NextResponse.json({ success: false, error: 'Unauthorized' }, { status: 401 });
+    }
     return NextResponse.json(
-      { success: false, error: error.message || 'Failed to export data' },
-      { status: error.message === 'Unauthorized' ? 401 : 500 }
+      { success: false, error: 'Failed to export data' },
+      { status: 500 }
     );
   }
 }
