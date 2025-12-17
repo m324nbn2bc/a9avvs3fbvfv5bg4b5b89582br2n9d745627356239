@@ -23,8 +23,7 @@ export default function CampaignResultPage() {
   const [userPhoto, setUserPhoto] = useState(null);
   const [loading, setLoading] = useState(true);
   const [composedImageUrl, setComposedImageUrl] = useState('');
-  const [redownloading, setRedownloading] = useState(false);
-
+  
   const canvasRef = useRef(null);
   const composedImageUrlRef = useRef(null);
 
@@ -85,35 +84,6 @@ export default function CampaignResultPage() {
   const handleStartOver = () => {
     campaignSession.clearSession(slug);
     router.push(`/campaign/${slug}`);
-  };
-
-  // Re-download
-  const handleRedownload = async () => {
-    if (!userPhoto || !campaign || !session) return;
-    
-    setRedownloading(true);
-    
-    try {
-      const { blob } = await composeImages(
-        userPhoto,
-        getCampaignPreview(campaign.imageUrl),
-        session.adjustments || { scale: 1.0, x: 0, y: 0 },
-        campaign.type
-      );
-      
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `${campaign.slug}-${Date.now()}.png`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Error re-downloading:', error);
-    } finally {
-      setRedownloading(false);
-    }
   };
 
   // Share functionality
@@ -187,19 +157,6 @@ export default function CampaignResultPage() {
                 </div>
 
                 <div className="space-y-5">
-                  
-                  <div>
-                    <h2 className="text-lg font-bold text-gray-900 mb-3">Actions</h2>
-                    <button
-                      onClick={handleRedownload}
-                      disabled={redownloading}
-                      className={`btn-base btn-secondary w-full py-3 font-medium ${
-                        redownloading ? 'opacity-70 cursor-wait' : ''
-                      }`}
-                    >
-                      {redownloading ? 'Downloading...' : 'Download Again'}
-                    </button>
-                  </div>
 
                   <div>
                     <h3 className="text-lg font-bold text-gray-900 mb-3">Share Your Creation</h3>
