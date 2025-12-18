@@ -253,7 +253,14 @@ export function AuthProvider({ children }) {
       }
       
       // Send email verification
-      await sendEmailVerification(result.user);
+      if (typeof window !== 'undefined') {
+        await sendEmailVerification(result.user, {
+          url: `${window.location.origin}/verify-email`,
+          handleCodeInApp: true
+        });
+      } else {
+        await sendEmailVerification(result.user);
+      }
 
       return { success: true, requiresVerification: true };
     } catch (error) {
@@ -327,7 +334,14 @@ export function AuthProvider({ children }) {
   const sendVerificationEmail = async () => {
     try {
       if (firebase.auth?.currentUser) {
-        await sendEmailVerification(firebase.auth.currentUser);
+        if (typeof window !== 'undefined') {
+          await sendEmailVerification(firebase.auth.currentUser, {
+            url: `${window.location.origin}/verify-email`,
+            handleCodeInApp: true
+          });
+        } else {
+          await sendEmailVerification(firebase.auth.currentUser);
+        }
         return { success: true };
       }
       return { success: false, error: 'No user signed in' };
