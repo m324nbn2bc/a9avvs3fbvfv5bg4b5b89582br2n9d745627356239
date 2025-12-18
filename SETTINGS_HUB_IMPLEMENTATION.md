@@ -25,7 +25,6 @@ The following improvements have been made to ensure consistency and maintainabil
   - Provides additional safety layer against accidental account deletion
 - ✅ Privacy page state keys now match API keys exactly
   - Renamed `showInLeaderboard` to `showInCreatorLeaderboard`
-  - Renamed `allowSearchEngines` to `allowSearchEngineIndexing`
   - Simplified `handleToggle` function - no longer needs separate key mapping
 - ✅ Account deletion scheduled date now stored as Firestore Timestamp
   - Changed from JS Date to `Timestamp.fromDate()` for type consistency
@@ -53,7 +52,7 @@ The following items have been implemented:
 The following items have been implemented:
 - ✅ Privacy Visibility API (`src/app/api/settings/privacy/visibility/route.js`)
   - GET: Fetch current privacy settings
-  - PATCH: Update privacy settings (profileVisibility, showInCreatorLeaderboard, allowSearchEngineIndexing, showSupportCount)
+  - PATCH: Update privacy settings (profileVisibility, showInCreatorLeaderboard, showSupportCount)
 - ✅ Data Export API (`src/app/api/settings/privacy/export/route.js`)
   - POST: Export all user data (profile, campaigns, notifications) as JSON
   - GDPR-compliant data export functionality
@@ -169,7 +168,6 @@ src/middleware/userAuth.js      # NEW: User authentication middleware (like admi
   privacySettings: {
     profileVisibility: "public" | "private",  // Default: "public"
     showInCreatorLeaderboard: true,           // Default: true
-    allowSearchEngineIndexing: true,          // Default: true
     showSupportCount: true,                   // Default: true
   },
   
@@ -580,10 +578,7 @@ export async function DELETE(request) {
    - Toggle: Show in creator leaderboard
    - Toggle: Show support count
 
-2. **Search Engine Indexing**
-   - Toggle: Allow search engines to index profile
-
-3. **Data Export (GDPR)**
+2. **Data Export (GDPR)**
    - Button: "Request Data Export"
    - Generates JSON with all user data
    - Includes: profile, campaigns, notifications
@@ -608,7 +603,6 @@ export async function PATCH(request) {
     const allowedSettings = [
       'profileVisibility',
       'showInCreatorLeaderboard', 
-      'allowSearchEngineIndexing',
       'showSupportCount'
     ];
     

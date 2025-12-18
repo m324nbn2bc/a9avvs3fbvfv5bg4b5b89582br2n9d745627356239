@@ -13,7 +13,6 @@ export async function PATCH(request) {
     const allowedSettings = [
       'profileVisibility',
       'showInCreatorLeaderboard',
-      'allowSearchEngineIndexing',
       'showSupportCount'
     ];
 
@@ -79,7 +78,6 @@ export async function GET(request) {
       settings: {
         profileVisibility: privacySettings.profileVisibility || 'public',
         showInCreatorLeaderboard: privacySettings.showInCreatorLeaderboard !== false,
-        allowSearchEngineIndexing: privacySettings.allowSearchEngineIndexing !== false,
         showSupportCount: privacySettings.showSupportCount !== false,
       }
     });

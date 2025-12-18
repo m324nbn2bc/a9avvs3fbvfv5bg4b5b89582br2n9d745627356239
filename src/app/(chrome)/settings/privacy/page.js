@@ -12,7 +12,6 @@ export default function PrivacySettingsPage() {
   const [settings, setSettings] = useState({
     profileVisibility: true,
     showInCreatorLeaderboard: true,
-    allowSearchEngineIndexing: true,
     showSupportCount: true
   });
   const [loading, setLoading] = useState(true);
@@ -40,7 +39,6 @@ export default function PrivacySettingsPage() {
             setSettings({
               profileVisibility: data.settings.profileVisibility === 'public',
               showInCreatorLeaderboard: data.settings.showInCreatorLeaderboard,
-              allowSearchEngineIndexing: data.settings.allowSearchEngineIndexing,
               showSupportCount: data.settings.showSupportCount
             });
           }
@@ -198,18 +196,6 @@ export default function PrivacySettingsPage() {
               description="Display the number of supporters on your campaigns"
               checked={settings.showSupportCount}
               onChange={() => handleToggle("showSupportCount")}
-              disabled={saving}
-            />
-          </SettingsCard>
-        </SettingsSection>
-
-        <SettingsSection title="Search Engine Indexing" description="Control how search engines see your profile">
-          <SettingsCard title="Search Visibility">
-            <SettingsToggle
-              label="Allow Search Engine Indexing"
-              description="Let search engines like Google index your profile"
-              checked={settings.allowSearchEngineIndexing}
-              onChange={() => handleToggle("allowSearchEngineIndexing")}
               disabled={saving}
             />
           </SettingsCard>
