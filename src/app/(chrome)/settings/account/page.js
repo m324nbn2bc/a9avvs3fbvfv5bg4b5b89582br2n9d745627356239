@@ -318,7 +318,7 @@ export default function AccountSettingsPage() {
       await reauthenticateWithCredential(currentUser, credential);
       await verifyBeforeUpdateEmail(currentUser, emailForm.newEmail);
 
-      setEmailSuccess("A verification email has been sent to your new email address. Please click the link in that email to complete the change. Your email will only be updated after verification.");
+      setEmailSuccess("If this email is available, we've sent a verification link to complete the change.\n• Check your spam/promotions folder if you don't see it\n• The verification link will expire in 3 days\n• Verification emails may take up to 60 minutes to arrive");
       setEmailForm({
         currentPassword: "",
         newEmail: "",
@@ -436,7 +436,7 @@ export default function AccountSettingsPage() {
               </div>
             )}
             {emailSuccess && (
-              <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-green-600 text-sm mb-4">
+              <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-green-600 text-sm mb-4 whitespace-pre-wrap">
                 {emailSuccess}
               </div>
             )}
