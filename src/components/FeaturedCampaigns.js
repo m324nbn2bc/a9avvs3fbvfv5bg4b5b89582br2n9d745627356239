@@ -36,7 +36,9 @@ export default function FeaturedCampaigns() {
     setShareModalData({
       type: 'campaign',
       title: campaign.title,
-      url: `${typeof window !== 'undefined' ? window.location.origin : ''}/campaign/${campaign.slug}`
+      subtitle: campaign.type === 'frame' ? 'Frame' : 'Background',
+      url: `${typeof window !== 'undefined' ? window.location.origin : ''}/campaign/${campaign.slug}`,
+      image: campaign.imageUrl,
     });
   };
 
@@ -120,7 +122,9 @@ export default function FeaturedCampaigns() {
         onClose={() => setShareModalData(null)}
         type={shareModalData?.type}
         title={shareModalData?.title}
+        subtitle={shareModalData?.subtitle}
         url={shareModalData?.url}
+        image={shareModalData?.image}
       />
 
       <ReportModal
