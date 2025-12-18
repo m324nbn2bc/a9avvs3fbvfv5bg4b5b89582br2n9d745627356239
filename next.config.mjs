@@ -55,10 +55,6 @@ const nextConfig = {
             value: 'origin-when-cross-origin',
           },
           {
-            key: 'X-Robots-Tag',
-            value: 'noindex, nofollow',
-          },
-          {
             key: 'Content-Security-Policy',
             value: [
               "default-src 'self'",
