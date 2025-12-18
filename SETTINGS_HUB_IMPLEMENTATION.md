@@ -588,9 +588,6 @@ export async function DELETE(request) {
    - Generates JSON with all user data
    - Includes: profile, campaigns, notifications
 
-4. **Connected Apps** (Placeholder for Phase 2)
-   - Show "Coming Soon" for OAuth connections
-
 #### Task 8: Create Privacy APIs
 
 **File:** `src/app/api/settings/privacy/visibility/route.js`
@@ -973,7 +970,6 @@ Log all sensitive actions to `users/{userId}/activityLog`:
 - Session management (view/revoke sessions)
 - Full theme implementation (dark mode toggle)
 - Multi-language support (i18n)
-- Connected apps/OAuth management
 - Email change functionality
 - Account deletion cron job (add to `vercel.json`)
 

@@ -195,52 +195,7 @@ Users could not change their email address. The UI showed "Email changes are not
 
 ---
 
-## 5. Connected Apps / OAuth
-
-**Priority:** Low  
-**Complexity:** High  
-**Current State:** Placeholder section shows "No connected apps" message.
-
-### Problem
-
-Users cannot connect third-party apps or view OAuth authorizations. This becomes relevant when:
-- API access is offered to third parties
-- OAuth login providers beyond Google are added
-- Third-party integrations are built
-
-### Implementation Requirements
-
-1. **Database schema:**
-   ```javascript
-   // Firestore: `users/{userId}/connectedApps/{appId}`
-   {
-     appName: string,          // e.g., "Zapier", "IFTTT"
-     appIcon: string,          // URL to app icon
-     permissions: string[],    // What the app can access
-     connectedAt: timestamp,
-     lastUsedAt: timestamp,
-   }
-   ```
-
-2. **API endpoints:**
-   ```
-   GET /api/settings/connected-apps      - List connected apps
-   DELETE /api/settings/connected-apps/:id - Revoke app access
-   ```
-
-3. **UI updates:**
-   - Replace placeholder with connected apps list
-   - Show app name, icon, permissions granted, connection date
-   - "Revoke Access" button per app
-
-4. **Considerations:**
-   - Only implement when OAuth/API functionality is added
-   - Consider showing linked login providers (Google, etc.)
-   - May tie into future API key management
-
----
-
-## 6. Additional Languages (i18n)
+## 5. Additional Languages (i18n)
 
 **Priority:** Low  
 **Complexity:** High  
@@ -301,8 +256,7 @@ Users cannot connect third-party apps or view OAuth authorizations. This becomes
 | 2 | Dark Mode Implementation | Medium | Medium | None |
 | 3 | Session Management | Medium | High | None |
 | 4 | Email Change | Low | Medium | None |
-| 5 | Connected Apps | Low | High | OAuth/API system |
-| 6 | Additional Languages | Low | High | Content translation |
+| 5 | Additional Languages | Low | High | Content translation |
 
 ---
 
@@ -311,4 +265,4 @@ Users cannot connect third-party apps or view OAuth authorizations. This becomes
 - **Account Deletion Cron** should be prioritized as it completes a critical user flow
 - **Dark Mode** offers good UX improvement with moderate effort
 - **Session Management** requires significant backend work but enhances security
-- **Email Change**, **Connected Apps**, and **Languages** can be deferred until specific user demand
+- **Email Change** and **Languages** can be deferred until specific user demand
