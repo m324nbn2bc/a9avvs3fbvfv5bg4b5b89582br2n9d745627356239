@@ -316,10 +316,7 @@ export default function AccountSettingsPage() {
       );
 
       await reauthenticateWithCredential(currentUser, credential);
-      await verifyBeforeUpdateEmail(currentUser, emailForm.newEmail, {
-        url: `${window.location.origin}/settings/account`,
-        handleCodeInApp: true
-      });
+      await verifyBeforeUpdateEmail(currentUser, emailForm.newEmail);
 
       setEmailSuccess("If this email is available, we've sent a verification link to complete the change.\n• Check your spam/promotions folder if you don't see it\n• The verification link will expire in 3 days\n• Verification emails may take up to 60 minutes to arrive");
       setEmailForm({

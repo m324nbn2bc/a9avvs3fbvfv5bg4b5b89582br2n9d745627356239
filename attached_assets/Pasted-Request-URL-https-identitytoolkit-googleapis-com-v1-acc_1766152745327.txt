@@ -1,0 +1,101 @@
+Request URL
+https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=AIzaSyAEa-QwjkIvASDOe6_L89wqZzOnRhzJ450
+Request Method
+POST
+Status Code
+200 OK
+Remote Address
+142.250.201.234:443
+Referrer Policy
+no-referrer
+access-control-allow-origin
+https://replit-twibbon.vercel.app
+access-control-expose-headers
+date,vary,vary,vary,content-encoding,server,content-length
+alt-svc
+h3=":443"; ma=2592000,h3-29=":443"; ma=2592000
+cache-control
+no-cache, no-store, max-age=0, must-revalidate
+content-encoding
+gzip
+content-length
+502
+content-type
+application/json; charset=UTF-8
+date
+Fri, 19 Dec 2025 13:57:05 GMT
+expires
+Mon, 01 Jan 1990 00:00:00 GMT
+pragma
+no-cache
+server
+ESF
+vary
+Origin
+vary
+X-Origin
+vary
+Referer
+x-content-type-options
+nosniff
+x-frame-options
+SAMEORIGIN
+x-xss-protection
+0
+:authority
+identitytoolkit.googleapis.com
+:method
+POST
+:path
+/v1/accounts:lookup?key=AIzaSyAEa-QwjkIvASDOe6_L89wqZzOnRhzJ450
+:scheme
+https
+accept
+*/*
+accept-encoding
+gzip, deflate, br, zstd
+accept-language
+en-US,en;q=0.9,ur;q=0.8,ar;q=0.7
+content-length
+1162
+content-type
+application/json
+origin
+https://replit-twibbon.vercel.app
+priority
+u=1, i
+sec-ch-ua
+"Google Chrome";v="143", "Chromium";v="143", "Not A(Brand";v="24"
+sec-ch-ua-mobile
+?0
+sec-ch-ua-platform
+"Windows"
+sec-fetch-dest
+empty
+sec-fetch-mode
+cors
+sec-fetch-site
+cross-site
+user-agent
+Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36
+x-browser-channel
+stable
+x-browser-copyright
+Copyright 2025 Google LLC. All Rights reserved.
+x-browser-validation
+UujAs0GAwdnCJ9nvrswZ+O+oco0=
+x-browser-year
+2025
+x-client-data
+CIe2yQEIprbJAQipncoBCNLlygEIlqHLAQiFoM0BCPyZzwEIkaTPARjyos8B
+Decoded:
+message ClientVariations {
+  // Active Google-visible variation IDs on this client. These are reported for analysis, but do not directly affect any server-side behavior.
+  repeated int32 variation_id = [3300103, 3300134, 3313321, 3322578, 3330198, 3362821, 3394812, 3396113];
+  // Active Google-visible variation IDs on this client that trigger server-side behavior. These are reported for analysis *and* directly affect server-side behavior.
+  repeated int32 trigger_variation_id = [3395954];
+}
+x-client-version
+Chrome/JsCore/12.2.0/FirebaseCore-web
+x-firebase-gmpid
+1:846319073049:web:be7b8dd2df834610da7788
