@@ -1,2 +1,4 @@
 User-agent: *
 Allow: /
+
+Sitemap: https://replit-twibbon.vercel.app/sitemap.xml
