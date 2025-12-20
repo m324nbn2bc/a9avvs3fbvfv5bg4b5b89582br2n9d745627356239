@@ -89,6 +89,15 @@ export function middleware(request) {
     response.headers.set('Cache-Control', 'no-cache, no-store, must-revalidate');
   }
 
+  // Add robots meta tag for SEO
+  if (isDevEnvironment) {
+    // Prevent indexing of development/staging environments
+    response.headers.set('X-Robots-Tag', 'noindex, nofollow');
+  } else {
+    // Allow indexing of production environment
+    response.headers.set('X-Robots-Tag', 'index, follow');
+  }
+
   return response;
 }
 
