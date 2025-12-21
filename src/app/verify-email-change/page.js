@@ -16,6 +16,8 @@ export default function VerifyEmailChangePage() {
   const [isResending, setIsResending] = useState(false);
   const [resendMessage, setResendMessage] = useState('');
   const [resendCooldown, setResendCooldown] = useState(0);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(true);
+  const pollIntervalRef = useRef(null);
   const safetyTimeoutRef = useRef(null);
 
   // Get new email from sessionStorage on mount
@@ -39,11 +41,44 @@ export default function VerifyEmailChangePage() {
     }
   }, [resendCooldown]);
 
-  // Redirect to signin if user logs out
+  // Poll for email verification (Firebase doesn't push updates)
+  useEffect(() => {
+    if (!user || loading) return;
+
+    const checkEmailVerification = async () => {
+      try {
+        // Reload user to get latest email verification status
+        await user.reload();
+        
+        // If email was verified, Firebase will auto-logout the user
+        // We detect this by checking onAuthStateChanged in useAuth hook
+        // The user will be null when logged out
+      } catch (error) {
+        console.error('Error checking email verification:', error);
+      }
+    };
+
+    // Check every 3 seconds
+    pollIntervalRef.current = setInterval(checkEmailVerification, 3000);
+
+    return () => {
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+      }
+    };
+  }, [user, loading]);
+
+  // Redirect to signin if user logs out (after email verification)
   useEffect(() => {
     if (!loading && !user) {
       // User has logged out (after email verification), redirect to signin
       sessionStorage.removeItem('pendingEmailChange');
+      
+      // Clear polling interval
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+      }
+      
       router.replace('/signin');
     }
   }, [user, loading, router]);
@@ -53,6 +88,9 @@ export default function VerifyEmailChangePage() {
     return () => {
       if (safetyTimeoutRef.current) {
         clearTimeout(safetyTimeoutRef.current);
+      }
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
       }
     };
   }, []);
@@ -81,6 +119,9 @@ export default function VerifyEmailChangePage() {
 
   const handleBackToSettings = () => {
     sessionStorage.removeItem('pendingEmailChange');
+    if (pollIntervalRef.current) {
+      clearInterval(pollIntervalRef.current);
+    }
     router.push('/settings/account');
   };
 
@@ -110,6 +151,39 @@ export default function VerifyEmailChangePage() {
         {/* Left Side - Verification Instructions */}
         <div className="flex-1 w-full flex flex-col justify-center py-8 px-4 sm:px-6 lg:px-16 xl:px-20 pt-20">
           <div className="mx-auto w-full max-w-sm lg:max-w-md">
+            {/* Success Message */}
+            {showSuccessMessage && (
+              <div className="mb-6 p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
+                <div className="flex gap-3">
+                  <svg
+                    className="w-5 h-5 text-emerald-600 flex-shrink-0 mt-0.5"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                  <div>
+                    <p className="text-sm font-medium text-emerald-800">Verification email sent!</p>
+                    <p className="text-xs text-emerald-700 mt-1">
+                      If this email is available, we've sent a verification link to <span className="font-medium">{newEmail}</span>
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setShowSuccessMessage(false)}
+                    className="text-emerald-600 hover:text-emerald-700 ml-auto flex-shrink-0"
+                  >
+                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* Header with Yellow Background */}
             <div className="text-center mb-6 bg-yellow-400 px-4 py-3 rounded-t-lg">
               <div className="mx-auto w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center mb-3">

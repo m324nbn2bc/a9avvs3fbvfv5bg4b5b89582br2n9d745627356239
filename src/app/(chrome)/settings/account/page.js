@@ -323,7 +323,7 @@ export default function AccountSettingsPage() {
       // Store the new email in sessionStorage for the verify-email-change page
       sessionStorage.setItem('pendingEmailChange', emailForm.newEmail);
 
-      setEmailSuccess("If this email is available, we've sent a verification link to complete the change.\n• Check your spam/promotions folder if you don't see it\n• The verification link will expire in 3 days\n• Verification emails may take up to 60 minutes to arrive");
+      // Reset form and clear messages
       setEmailForm({
         currentPassword: "",
         newEmail: "",
@@ -331,10 +331,8 @@ export default function AccountSettingsPage() {
       });
       setShowEmailForm(false);
 
-      // Redirect to verify-email-change page after a short delay
-      setTimeout(() => {
-        router.push('/verify-email-change');
-      }, 500);
+      // Redirect to verify-email-change page immediately
+      router.push('/verify-email-change');
     } catch (error) {
       if (error.code === "auth/wrong-password" || error.code === "auth/invalid-credential") {
         setEmailError("Current password is incorrect");
@@ -443,11 +441,6 @@ export default function AccountSettingsPage() {
             {emailError && (
               <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm mb-4">
                 {emailError}
-              </div>
-            )}
-            {emailSuccess && (
-              <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-green-600 text-sm mb-4 whitespace-pre-wrap">
-                {emailSuccess}
               </div>
             )}
 
