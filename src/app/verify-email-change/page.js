@@ -245,7 +245,7 @@ export default function VerifyEmailChangePage() {
                     onClick={handleResendVerification}
                     disabled={isResending || resendCooldown > 0}
                     className={`btn-link font-medium ml-1 ${
-                      resendCooldown > 0 ? 'opacity-50 cursor-not-allowed' : ''
+                      resendCooldown > 0 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
                     }`}
                   >
                     {isResending
