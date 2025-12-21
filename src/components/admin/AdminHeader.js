@@ -3,7 +3,7 @@
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 
-export default function AdminHeader({ user }) {
+export default function AdminHeader({ user, isCollapsed, setIsCollapsed }) {
   const pathname = usePathname();
 
   const getBreadcrumbs = () => {
@@ -37,7 +37,16 @@ export default function AdminHeader({ user }) {
   return (
     <header className="sticky top-0 z-10 bg-white border-b border-gray-200 px-6 py-4 shadow-sm">
       <div className="flex items-center justify-between">
-        <div>
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => setIsCollapsed(!isCollapsed)}
+            className="lg:hidden p-2 bg-emerald-700 text-white rounded-md hover:bg-emerald-800 transition-colors"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={isCollapsed ? "M4 6h16M4 12h16M4 18h16" : "M6 18L18 6M6 6l12 12"} />
+            </svg>
+          </button>
+          <div>
           <nav className="flex items-center space-x-2 text-sm text-gray-500 mb-2">
             {breadcrumbs.map((crumb, index) => (
               <div key={crumb.href} className="flex items-center">
@@ -56,6 +65,7 @@ export default function AdminHeader({ user }) {
             ))}
           </nav>
           <h1 className="text-2xl font-bold text-gray-900">{pageTitle}</h1>
+          </div>
         </div>
 
         <div className="flex items-center space-x-4">
