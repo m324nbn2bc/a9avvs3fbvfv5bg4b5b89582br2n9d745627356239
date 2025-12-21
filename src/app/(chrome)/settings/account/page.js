@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import SettingsSection from "@/components/settings/SettingsSection";
 import SettingsCard from "@/components/settings/SettingsCard";
@@ -8,6 +9,7 @@ import ConfirmationModal from "@/components/ConfirmationModal";
 import { getStoredSessionId } from "@/utils/sessionManager";
 
 export default function AccountSettingsPage() {
+  const router = useRouter();
   const { user } = useAuth();
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: "",
@@ -318,6 +320,9 @@ export default function AccountSettingsPage() {
       await reauthenticateWithCredential(currentUser, credential);
       await verifyBeforeUpdateEmail(currentUser, emailForm.newEmail);
 
+      // Store the new email in sessionStorage for the verify-email-change page
+      sessionStorage.setItem('pendingEmailChange', emailForm.newEmail);
+
       setEmailSuccess("If this email is available, we've sent a verification link to complete the change.\n• Check your spam/promotions folder if you don't see it\n• The verification link will expire in 3 days\n• Verification emails may take up to 60 minutes to arrive");
       setEmailForm({
         currentPassword: "",
@@ -325,6 +330,11 @@ export default function AccountSettingsPage() {
         confirmEmail: ""
       });
       setShowEmailForm(false);
+
+      // Redirect to verify-email-change page after a short delay
+      setTimeout(() => {
+        router.push('/verify-email-change');
+      }, 500);
     } catch (error) {
       if (error.code === "auth/wrong-password" || error.code === "auth/invalid-credential") {
         setEmailError("Current password is incorrect");
