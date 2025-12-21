@@ -46,26 +46,7 @@ export default function AdminHeader({ user, isCollapsed, setIsCollapsed }) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={isCollapsed ? "M4 6h16M4 12h16M4 18h16" : "M6 18L18 6M6 6l12 12"} />
             </svg>
           </button>
-          <div>
-          <nav className="flex items-center space-x-2 text-sm text-gray-500 mb-2">
-            {breadcrumbs.map((crumb, index) => (
-              <div key={crumb.href} className="flex items-center">
-                {index > 0 && (
-                  <svg className="w-4 h-4 mx-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
-                  </svg>
-                )}
-                <Link
-                  href={crumb.href}
-                  className="hover:text-emerald-600 transition-colors"
-                >
-                  {crumb.name}
-                </Link>
-              </div>
-            ))}
-          </nav>
           <h1 className="text-2xl font-bold text-gray-900">{pageTitle}</h1>
-          </div>
         </div>
 
         <div className="flex items-center space-x-4">
@@ -81,10 +62,6 @@ export default function AdminHeader({ user, isCollapsed, setIsCollapsed }) {
           >
             View Site
           </Link>
-
-          <div className="w-10 h-10 bg-emerald-600 rounded-full flex items-center justify-center text-white text-sm font-bold">
-            {user?.displayName?.charAt(0) || user?.email?.charAt(0) || "A"}
-          </div>
         </div>
       </div>
     </header>
