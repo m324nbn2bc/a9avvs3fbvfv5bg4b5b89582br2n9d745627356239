@@ -93,13 +93,21 @@ export default function AdminSidebar({ user, onSignOut, isCollapsed, setIsCollap
         }`}
       >
         <div className="flex flex-col h-full">
-          <div className="p-6 border-b border-gray-800">
+          <div className="p-6 border-b border-gray-800 flex items-center justify-between">
             <Link href="/" className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-emerald-600 rounded-lg flex items-center justify-center">
                 <span className="text-xl font-bold">A</span>
               </div>
               {!isCollapsed && <span className="text-xl font-bold">Admin Panel</span>}
             </Link>
+            <button
+              onClick={() => setIsCollapsed(true)}
+              className="lg:hidden p-2 text-gray-300 hover:text-white hover:bg-gray-800 rounded transition-colors"
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
           </div>
 
           <nav className="flex-1 p-4 space-y-2">
