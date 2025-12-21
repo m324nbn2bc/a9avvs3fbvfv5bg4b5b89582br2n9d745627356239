@@ -11,7 +11,7 @@ const caveat = Caveat({ subsets: ['latin'], weight: ['700'] });
 
 export default function VerifyEmailChangePage() {
   const router = useRouter();
-  const { user, loading, sendVerificationEmail } = useAuth();
+  const { user, loading } = useAuth();
   const [newEmail, setNewEmail] = useState('');
   const [isResending, setIsResending] = useState(false);
   const [resendMessage, setResendMessage] = useState('');
@@ -99,15 +99,28 @@ export default function VerifyEmailChangePage() {
     setResendMessage('');
 
     try {
-      const result = await sendVerificationEmail();
-      if (result.success) {
-        setResendMessage('Verification email sent!');
-        setResendCooldown(60);
-      } else {
-        setResendMessage(`Error: ${result.error}`);
+      const { getAuth, verifyBeforeUpdateEmail } = await import("firebase/auth");
+      const auth = getAuth();
+      const currentUser = auth.currentUser;
+
+      if (!currentUser) {
+        setResendMessage('Error: No user signed in');
+        setIsResending(false);
+        return;
       }
+
+      // Resend verification for the pending email change
+      await verifyBeforeUpdateEmail(currentUser, newEmail);
+      setResendMessage('Verification email sent!');
+      setResendCooldown(60);
     } catch (error) {
-      setResendMessage('Error: Failed to resend verification email');
+      // Handle Firebase errors
+      if (error.code === 'auth/too-many-requests') {
+        setResendMessage('Too many requests. Please wait before trying again.');
+      } else {
+        setResendMessage(`Error: ${error.message || 'Failed to resend verification email'}`);
+      }
+      console.error('Error resending verification email:', error);
     }
 
     setIsResending(false);
