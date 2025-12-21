@@ -46,7 +46,7 @@ export default function AdminHeader({ user, isCollapsed, setIsCollapsed }) {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={isCollapsed ? "M4 6h16M4 12h16M4 18h16" : "M6 18L18 6M6 6l12 12"} />
             </svg>
           </button>
-          <h1 className="text-2xl font-bold text-gray-900">{pageTitle}</h1>
+          <h1 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-900">{pageTitle}</h1>
         </div>
 
         <div className="flex items-center space-x-4">
