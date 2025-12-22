@@ -7,6 +7,7 @@ import SettingsSection from "@/components/settings/SettingsSection";
 import SettingsCard from "@/components/settings/SettingsCard";
 import ConfirmationModal from "@/components/ConfirmationModal";
 import { getStoredSessionId } from "@/utils/sessionManager";
+import { validatePasswordChange, validateEmailChange } from "@/utils/validation";
 
 export default function AccountSettingsPage() {
   const router = useRouter();
@@ -234,13 +235,13 @@ export default function AccountSettingsPage() {
     setPasswordError("");
     setPasswordSuccess("");
 
-    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
-      setPasswordError("New passwords do not match");
-      return;
-    }
-
-    if (passwordForm.newPassword.length < 8) {
-      setPasswordError("New password must be at least 8 characters");
+    // Validate password change using centralized validation
+    const passwordValidationError = validatePasswordChange(
+      passwordForm.newPassword,
+      passwordForm.confirmPassword
+    );
+    if (passwordValidationError) {
+      setPasswordError(passwordValidationError);
       return;
     }
 
@@ -289,19 +290,14 @@ export default function AccountSettingsPage() {
     setEmailError("");
     setEmailSuccess("");
 
-    if (emailForm.newEmail !== emailForm.confirmEmail) {
-      setEmailError("Email addresses do not match");
-      return;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(emailForm.newEmail)) {
-      setEmailError("Please enter a valid email address");
-      return;
-    }
-
-    if (emailForm.newEmail === user?.email) {
-      setEmailError("New email must be different from your current email");
+    // Validate email change using centralized validation
+    const emailValidationError = validateEmailChange(
+      emailForm.newEmail,
+      emailForm.confirmEmail,
+      user?.email
+    );
+    if (emailValidationError) {
+      setEmailError(emailValidationError);
       return;
     }
 

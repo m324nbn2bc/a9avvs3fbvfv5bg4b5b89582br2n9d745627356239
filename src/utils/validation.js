@@ -1,9 +1,11 @@
 // Validation utilities for authentication forms
 
+// Email regex pattern used across the application
+export const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 export const validateEmail = (email) => {
   if (!email) return 'Email is required';
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailRegex.test(email)) return 'Please enter a valid email address';
+  if (!EMAIL_REGEX.test(email)) return 'Please enter a valid email address';
   return null;
 };
 
@@ -22,6 +24,44 @@ export const validateName = (name) => {
 
 export const normalizeEmail = (email) => {
   return email ? email.toLowerCase().trim() : '';
+};
+
+// Settings page validation utilities
+export const validateFieldsMatch = (value1, value2, fieldName) => {
+  if (value1 !== value2) {
+    return `${fieldName} entries do not match`;
+  }
+  return null;
+};
+
+export const validatePasswordChange = (newPassword, confirmPassword) => {
+  // Check if passwords match
+  const matchError = validateFieldsMatch(newPassword, confirmPassword, 'Passwords');
+  if (matchError) return matchError;
+  
+  // Check password length
+  if (newPassword.length < 8) {
+    return 'New password must be at least 8 characters';
+  }
+  
+  return null;
+};
+
+export const validateEmailChange = (newEmail, confirmEmail, currentEmail) => {
+  // Check if emails match
+  const matchError = validateFieldsMatch(newEmail, confirmEmail, 'Email addresses');
+  if (matchError) return matchError;
+  
+  // Check if email is valid
+  const emailError = validateEmail(newEmail);
+  if (emailError) return emailError;
+  
+  // Check if email is different from current
+  if (newEmail === currentEmail) {
+    return 'New email must be different from your current email';
+  }
+  
+  return null;
 };
 
 // Shared form validation function for all authentication forms
