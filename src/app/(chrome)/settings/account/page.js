@@ -8,6 +8,7 @@ import SettingsCard from "@/components/settings/SettingsCard";
 import ConfirmationModal from "@/components/ConfirmationModal";
 import { getStoredSessionId } from "@/utils/sessionManager";
 import { validatePasswordChange, validateEmailChange } from "@/utils/validation";
+import { handleAccountError } from "@/utils/accountErrorHandler";
 
 export default function AccountSettingsPage() {
   const router = useRouter();
@@ -271,7 +272,7 @@ export default function AccountSettingsPage() {
         confirmPassword: ""
       });
     } catch (error) {
-      if (error.code === "auth/wrong-password") {
+      handleAccountError(error, 'password', setPasswordError);
         setPasswordError("Current password is incorrect");
       } else if (error.code === "auth/weak-password") {
         setPasswordError("New password is too weak. Please use a stronger password.");
@@ -324,7 +325,7 @@ export default function AccountSettingsPage() {
       sessionStorage.setItem('pendingEmailChange', emailForm.newEmail);
 
       // Reset form and clear messages
-      setEmailForm({
+      handleAccountError(error, 'email', setEmailError);
         currentPassword: "",
         newEmail: "",
         confirmEmail: ""

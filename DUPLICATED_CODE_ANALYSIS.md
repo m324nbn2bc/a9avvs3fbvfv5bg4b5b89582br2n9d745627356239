@@ -11,8 +11,9 @@
 4. ~~Form State Initialization~~ - Created custom hook `/src/hooks/useFormValidation.js` used in signin, signup, forgot-password (12 lines eliminated)
 5. ~~Frame Logo Header~~ - Created reusable component `/src/components/FrameLogo.jsx` used in signin, signup, forgot-password (24 lines eliminated)
 6. ~~Error Display Pattern~~ - Created reusable component `/src/components/ErrorAlert.jsx` used in signin, signup, forgot-password (30+ lines eliminated)
+7. ~~Firebase Error Handling~~ - Created utility `/src/utils/accountErrorHandler.js` used in password/email change handlers (15 lines eliminated)
 
-**Result**: ~231+ lines of duplication eliminated (165 + 66 from new fixes)
+**Result**: ~246+ lines of duplication eliminated (165 + 81 from new fixes)
 
 ---
 
@@ -22,12 +23,6 @@
 
 ## REMAINING MEDIUM PRIORITY (Settings Page)
 
-### Issue 4: Firebase Error Handling
-- **Files**: `/src/app/(chrome)/settings/account/page.js`
-- **Locations**: `handlePasswordChange()` + `handleEmailChange()`
-- **Duplication**: Error code mapping repeated in 2 functions
-- **What's duplicated**: Error codes like `auth/wrong-password`, `auth/weak-password`, etc.
-- **Solution**: Create `/src/utils/firebaseErrorHandler.js` with centralized error messages
 
 ### Issue 5: API Token Fetching Pattern
 - **Files**: `/src/app/(chrome)/settings/account/page.js`
@@ -60,9 +55,9 @@ const data = await response.json();
 | ~~Form state~~ | 3 pages | Hook | ~12 | ✅ FIXED |
 | ~~Frame Logo~~ | 3 pages | Component | ~24 | ✅ FIXED |
 | ~~Error display~~ | 3 pages | Component | ~30+ | ✅ FIXED |
-| Firebase errors | Settings | Function | ~15 | 🔜 TODO |
-| API token pattern | Settings | Function | ~50 | 🔜 TODO |
-| Date formatters | Settings | Function | ~25 | 🔜 TODO |
-| **REMAINING** | **3 issues** | - | **~90 lines** | |
+| ~~Firebase errors~~ | Settings | Utility | ~15 | ✅ FIXED |
+| API token pattern | Settings | Utility | ~50 | 🔜 TODO |
+| Date formatters | Settings | Utility | ~25 | 🔜 TODO |
+| **REMAINING** | **2 issues** | - | **~75 lines** | |
 
-**Progress**: 6/9 issues fixed = 231+ lines eliminated (67% complete)
+**Progress**: 7/9 issues fixed = 246+ lines eliminated (78% complete)
