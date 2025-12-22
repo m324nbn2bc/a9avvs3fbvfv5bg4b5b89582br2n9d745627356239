@@ -10,18 +10,16 @@ All 9 major duplication issues have been successfully refactored:
 
 ## 🔴 REMAINING ISSUES REQUIRING FIXES
 
-### Issue 5: API Token Fetching Pattern - NEEDS CLEANUP
+### Issue 5: API Token Fetching Pattern - ✅ FIXED
 - **File**: `/src/app/(chrome)/settings/account/page.js`
-- **Problem**: Sed replacements created duplicate lines instead of clean single function calls
-- **Current State**: 37 occurrences of `authenticatedFetch()` - likely with duplicate lines
-- **What to Fix**:
-  1. Check lines around 70-76 (account deletion calls)
-  2. Check lines around 102-108 (sessions list calls)
-  3. Check lines around 138-143 (session deletion calls)
-  4. Clean up any duplicate lines from sed command replacements
-  5. Ensure each API call is a single clean line with proper method/body parameters
-- **Expected Result**: Clean, single `authenticatedFetch()` calls (should be ~6-8 unique calls, not 37 duplicates)
-- **Lines to Clean**: ~15-20 lines of duplication
+- **Fix Applied**: Cleaned up duplicate lines created by sed replacements
+- **Fixed Sections**:
+  1. ✅ fetchDeletionStatus (line 67-82) - Single clean `authenticatedFetch()` call with try-catch
+  2. ✅ fetchSessions (line 95-115) - Single clean `authenticatedFetch()` call with proper error handling
+  3. ✅ handleRevokeSession (line 120-135) - Single clean DELETE request with proper response handling
+  4. ✅ handleRevokeAllSessions (line 145-165) - Single clean API call with currentSessionId parameter
+- **Result**: All 4 functions now have clean, single API calls without duplication
+- **Lines Cleaned**: ~20 lines of duplicate code removed
 
 ### Issue 6: Date Formatters - NEEDS COMPLETION
 - **File**: `/src/app/(chrome)/settings/account/page.js`

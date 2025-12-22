@@ -68,11 +68,7 @@ export default function AccountSettingsPage() {
     const fetchDeletionStatus = async () => {
       if (!user) return;
 
-        const data = await authenticatedFetch("/api/settings/account/delete", {}, user);
-        const data = await authenticatedFetch("/api/settings/account/delete", {}, user);
-        const data = await authenticatedFetch("/api/settings/account/delete", {}, user);
-        const data = await authenticatedFetch("/api/settings/account/delete", {}, user);
-        const data = await authenticatedFetch("/api/settings/account/delete", {}, user);
+      try {
         const data = await authenticatedFetch("/api/settings/account/delete", {}, user);
         });
 
@@ -100,12 +96,6 @@ export default function AccountSettingsPage() {
       setSessionsLoading(true);
       setSessionsError("");
 
-        const data = await authenticatedFetch("/api/settings/sessions", {}, user);
-        const data = await authenticatedFetch("/api/settings/sessions", {}, user);
-        const data = await authenticatedFetch("/api/settings/sessions", {}, user);
-        const data = await authenticatedFetch("/api/settings/sessions", {}, user);
-        const data = await authenticatedFetch("/api/settings/sessions", {}, user);
-        const data = await authenticatedFetch("/api/settings/sessions", {}, user);
         });
 
         const data = await response.json();
@@ -134,12 +124,6 @@ export default function AccountSettingsPage() {
   const handleRevokeSession = async (sessionId) => {
     if (!user) return;
 
-    setRevokingSessionId(sessionId);
-
-      const data = await authenticatedFetch(`/api/settings/sessions/${sessionId}`, { method: "DELETE" }, user);
-      const data = await authenticatedFetch(`/api/settings/sessions/${sessionId}`, { method: "DELETE" }, user);
-      const data = await authenticatedFetch(`/api/settings/sessions/${sessionId}`, { method: "DELETE" }, user);
-      const data = await authenticatedFetch(`/api/settings/sessions/${sessionId}`, { method: "DELETE" }, user);
       const data = await authenticatedFetch(`/api/settings/sessions/${sessionId}`, { method: "DELETE" }, user);
       const data = await authenticatedFetch(`/api/settings/sessions/${sessionId}`, { method: "DELETE" }, user);
         }
@@ -171,12 +155,6 @@ export default function AccountSettingsPage() {
       const data = await authenticatedFetch(`/api/settings/sessions?all=true      const response = await fetch(`/api/settings/sessions?all=true&currentSessionId=${currentSessionId}`, {currentSessionId=${currentSessionId}`, {}, user);
       const data = await authenticatedFetch(`/api/settings/sessions?all=true        method: 'DELETE',currentSessionId=${currentSessionId}`, {}, user);
       const data = await authenticatedFetch(`/api/settings/sessions?all=true        headers: {currentSessionId=${currentSessionId}`, {}, user);
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      const data = await response.json();
-
       if (data.success) {
         setSessions(prev => prev.filter(s => s.isCurrent));
       } else {
