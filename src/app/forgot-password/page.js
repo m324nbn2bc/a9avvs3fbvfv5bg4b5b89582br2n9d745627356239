@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { validateEmail, validateForm } from '../../utils/validation';
 import { useAuth } from '../../hooks/useAuth';
+import { scrollToField } from '../../utils/formHelpers';
 import { Caveat } from "next/font/google";
 import Link from "next/link";
 
@@ -29,32 +30,15 @@ export default function ForgotPasswordPage() {
     }
   }, [user, authLoading, router]);
 
-  const scrollToField = (fieldName) => {
-    const fieldRefs = {
-      email: emailRef
-    };
-    
-    const fieldRef = fieldRefs[fieldName];
-    if (fieldRef?.current) {
-      fieldRef.current.scrollIntoView({
-        behavior: 'smooth',
-        block: 'center'
-      });
-      // Focus the field after scrolling
-      setTimeout(() => {
-        fieldRef.current.focus();
-      }, 300);
-    }
-  };
-
   const validateFormFields = (formData) => {
+    const fieldRefs = { email: emailRef };
     const validation = validateForm(formData, 'forgot-password');
     
     setValidationErrors(validation.errors);
     
     // If there are errors, scroll to the first error field
     if (validation.firstErrorField) {
-      setTimeout(() => scrollToField(validation.firstErrorField), 100);
+      setTimeout(() => scrollToField(validation.firstErrorField, fieldRefs), 100);
     }
     
     return validation.isValid;
