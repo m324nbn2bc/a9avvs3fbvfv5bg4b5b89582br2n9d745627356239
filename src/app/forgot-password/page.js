@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { validateEmail, validateForm } from '../../utils/validation';
 import { useAuth } from '../../hooks/useAuth';
-import { scrollToField } from '../../utils/formHelpers';
+import { validateFormFields } from '../../utils/formHelpers';
 import { Caveat } from "next/font/google";
 import Link from "next/link";
 
@@ -29,20 +29,6 @@ export default function ForgotPasswordPage() {
       router.push('/');
     }
   }, [user, authLoading, router]);
-
-  const validateFormFields = (formData) => {
-    const fieldRefs = { email: emailRef };
-    const validation = validateForm(formData, 'forgot-password');
-    
-    setValidationErrors(validation.errors);
-    
-    // If there are errors, scroll to the first error field
-    if (validation.firstErrorField) {
-      setTimeout(() => scrollToField(validation.firstErrorField, fieldRefs), 100);
-    }
-    
-    return validation.isValid;
-  };
 
   const handleInputChange = (field, value) => {
     // Clear form validation errors when user starts typing
@@ -73,8 +59,9 @@ export default function ForgotPasswordPage() {
   const handleForgotPassword = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
+    const fieldRefs = { email: emailRef };
     
-    if (!validateFormFields(formData)) {
+    if (!validateFormFields(formData, 'forgot-password', setValidationErrors, fieldRefs)) {
       return;
     }
 

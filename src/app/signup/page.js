@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { validateEmail, validatePassword, validateName, validateForm } from '../../utils/validation';
 import { useAuth } from '../../hooks/useAuth';
-import { scrollToField } from '../../utils/formHelpers';
+import { validateFormFields } from '../../utils/formHelpers';
 import { Caveat } from "next/font/google";
 import Link from "next/link";
 
@@ -32,25 +32,12 @@ export default function SignUpPage() {
     }
   }, [user, authLoading, router]);
 
-  const validateFormFields = (formData) => {
-    const fieldRefs = { name: nameRef, email: emailRef, password: passwordRef };
-    const validation = validateForm(formData, 'signup');
-    
-    setValidationErrors(validation.errors);
-    
-    // If there are errors, scroll to the first error field
-    if (validation.firstErrorField) {
-      setTimeout(() => scrollToField(validation.firstErrorField, fieldRefs), 100);
-    }
-    
-    return validation.isValid;
-  };
-
   const handleEmailSignUp = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
+    const fieldRefs = { name: nameRef, email: emailRef, password: passwordRef };
     
-    if (!validateFormFields(formData)) {
+    if (!validateFormFields(formData, 'signup', setValidationErrors, fieldRefs)) {
       return;
     }
 
