@@ -8,6 +8,8 @@ import SettingsCard from "@/components/settings/SettingsCard";
 import ConfirmationModal from "@/components/ConfirmationModal";
 import { getStoredSessionId } from "@/utils/sessionManager";
 import { validatePasswordChange, validateEmailChange } from "@/utils/validation";
+import { authenticatedFetch } from "@/utils/apiClient";
+import { formatRelativeTime, formatFullDate } from "@/utils/dateFormatter";
 import { handlePasswordChangeError, handleEmailChangeError } from "@/utils/firebaseErrorHandler";
 
 
@@ -66,12 +68,12 @@ export default function AccountSettingsPage() {
     const fetchDeletionStatus = async () => {
       if (!user) return;
 
-      try {
-        const token = await user.getIdToken();
-        const response = await fetch('/api/settings/account/delete', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
+        const data = await authenticatedFetch("/api/settings/account/delete", {}, user);
+        const data = await authenticatedFetch("/api/settings/account/delete", {}, user);
+        const data = await authenticatedFetch("/api/settings/account/delete", {}, user);
+        const data = await authenticatedFetch("/api/settings/account/delete", {}, user);
+        const data = await authenticatedFetch("/api/settings/account/delete", {}, user);
+        const data = await authenticatedFetch("/api/settings/account/delete", {}, user);
         });
 
         if (response.ok) {
@@ -98,12 +100,12 @@ export default function AccountSettingsPage() {
       setSessionsLoading(true);
       setSessionsError("");
 
-      try {
-        const token = await user.getIdToken();
-        const response = await fetch('/api/settings/sessions', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
+        const data = await authenticatedFetch("/api/settings/sessions", {}, user);
+        const data = await authenticatedFetch("/api/settings/sessions", {}, user);
+        const data = await authenticatedFetch("/api/settings/sessions", {}, user);
+        const data = await authenticatedFetch("/api/settings/sessions", {}, user);
+        const data = await authenticatedFetch("/api/settings/sessions", {}, user);
+        const data = await authenticatedFetch("/api/settings/sessions", {}, user);
         });
 
         const data = await response.json();
@@ -134,12 +136,12 @@ export default function AccountSettingsPage() {
 
     setRevokingSessionId(sessionId);
 
-    try {
-      const token = await user.getIdToken();
-      const response = await fetch(`/api/settings/sessions/${sessionId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
+      const data = await authenticatedFetch(`/api/settings/sessions/${sessionId}`, { method: "DELETE" }, user);
+      const data = await authenticatedFetch(`/api/settings/sessions/${sessionId}`, { method: "DELETE" }, user);
+      const data = await authenticatedFetch(`/api/settings/sessions/${sessionId}`, { method: "DELETE" }, user);
+      const data = await authenticatedFetch(`/api/settings/sessions/${sessionId}`, { method: "DELETE" }, user);
+      const data = await authenticatedFetch(`/api/settings/sessions/${sessionId}`, { method: "DELETE" }, user);
+      const data = await authenticatedFetch(`/api/settings/sessions/${sessionId}`, { method: "DELETE" }, user);
         }
       });
 
@@ -163,12 +165,12 @@ export default function AccountSettingsPage() {
 
     setRevokingAll(true);
 
-    try {
-      const token = await user.getIdToken();
-      const currentSessionId = getStoredSessionId();
-      const response = await fetch(`/api/settings/sessions?all=true&currentSessionId=${currentSessionId}`, {
-        method: 'DELETE',
-        headers: {
+      const data = await authenticatedFetch(`/api/settings/sessions?all=true    try {currentSessionId=${currentSessionId}`, {}, user);
+      const data = await authenticatedFetch(`/api/settings/sessions?all=true      const token = await user.getIdToken();currentSessionId=${currentSessionId}`, {}, user);
+      const data = await authenticatedFetch(`/api/settings/sessions?all=true      const currentSessionId = getStoredSessionId();currentSessionId=${currentSessionId}`, {}, user);
+      const data = await authenticatedFetch(`/api/settings/sessions?all=true      const response = await fetch(`/api/settings/sessions?all=true&currentSessionId=${currentSessionId}`, {currentSessionId=${currentSessionId}`, {}, user);
+      const data = await authenticatedFetch(`/api/settings/sessions?all=true        method: 'DELETE',currentSessionId=${currentSessionId}`, {}, user);
+      const data = await authenticatedFetch(`/api/settings/sessions?all=true        headers: {currentSessionId=${currentSessionId}`, {}, user);
           'Authorization': `Bearer ${token}`
         }
       });
@@ -188,25 +190,6 @@ export default function AccountSettingsPage() {
     }
   };
 
-  const formatSessionDate = (dateString) => {
-    if (!dateString) return 'Unknown';
-    const date = new Date(dateString);
-    const now = new Date();
-    const diffMs = now - date;
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
-    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-    if (diffDays < 7) return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
-    
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: date.getFullYear() !== now.getFullYear() ? 'numeric' : undefined
-    });
   };
 
   const getDeviceIcon = (deviceType) => {
@@ -362,12 +345,12 @@ export default function AccountSettingsPage() {
     setDeleteLoading(true);
     setDeleteError("");
 
-    try {
-      const token = await user.getIdToken();
-      const response = await fetch('/api/settings/account/delete', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
+      const data = await authenticatedFetch("/api/settings/account/delete", { method: "POST", body: JSON.stringify({ confirmation: "DELETE" }) }, user);
+      const data = await authenticatedFetch("/api/settings/account/delete", { method: "POST", body: JSON.stringify({ confirmation: "DELETE" }) }, user);
+      const data = await authenticatedFetch("/api/settings/account/delete", { method: "POST", body: JSON.stringify({ confirmation: "DELETE" }) }, user);
+      const data = await authenticatedFetch("/api/settings/account/delete", { method: "POST", body: JSON.stringify({ confirmation: "DELETE" }) }, user);
+      const data = await authenticatedFetch("/api/settings/account/delete", { method: "POST", body: JSON.stringify({ confirmation: "DELETE" }) }, user);
+      const data = await authenticatedFetch("/api/settings/account/delete", { method: "POST", body: JSON.stringify({ confirmation: "DELETE" }) }, user);
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({ confirmation: 'DELETE' })
@@ -397,12 +380,12 @@ export default function AccountSettingsPage() {
 
     setCancelLoading(true);
 
-    try {
-      const token = await user.getIdToken();
-      const response = await fetch('/api/settings/account/delete', {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
+      const data = await authenticatedFetch("/api/settings/account/delete", { method: "POST", body: JSON.stringify({ confirmation: "DELETE" }) }, user);
+      const data = await authenticatedFetch("/api/settings/account/delete", { method: "POST", body: JSON.stringify({ confirmation: "DELETE" }) }, user);
+      const data = await authenticatedFetch("/api/settings/account/delete", { method: "POST", body: JSON.stringify({ confirmation: "DELETE" }) }, user);
+      const data = await authenticatedFetch("/api/settings/account/delete", { method: "POST", body: JSON.stringify({ confirmation: "DELETE" }) }, user);
+      const data = await authenticatedFetch("/api/settings/account/delete", { method: "POST", body: JSON.stringify({ confirmation: "DELETE" }) }, user);
+      const data = await authenticatedFetch("/api/settings/account/delete", { method: "POST", body: JSON.stringify({ confirmation: "DELETE" }) }, user);
         }
       });
 
@@ -421,7 +404,7 @@ export default function AccountSettingsPage() {
     }
   };
 
-  const formatDeletionDate = (dateString) => {
+  const formatFullDate = (dateString) => {
     if (!dateString) return '';
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
@@ -440,25 +423,6 @@ export default function AccountSettingsPage() {
       </div>
 
       <div className="bg-white rounded-b-xl border border-t-0 border-gray-200 px-6 py-8 shadow-sm space-y-8">
-        <SettingsSection title="Email Address" description="Your account email address">
-          <SettingsCard title="Email">
-            {emailError && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm mb-4">
-                {emailError}
-              </div>
-            )}
-
-            {!showEmailForm ? (
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-gray-900 font-medium">{user?.email || "No email"}</p>
-                  {isGoogleUser ? (
-                    <p className="text-sm text-gray-500 mt-1">Email is managed by Google and cannot be changed here</p>
-                  ) : (
-                    <p className="text-sm text-gray-500 mt-1">You can change your email address below</p>
-                  )}
-                </div>
-                {!isGoogleUser && (
                   <button
                     onClick={() => {
                       setShowEmailForm(true);
@@ -740,7 +704,7 @@ export default function AccountSettingsPage() {
                               )}
                             </div>
                             <p className="text-sm text-gray-500 mt-0.5">
-                              {session.deviceType} • Last active {formatSessionDate(session.lastActiveAt)}
+                              {session.deviceType} • Last active {formatRelativeTime(session.lastActiveAt)}
                             </p>
                           </div>
                         </div>
@@ -794,7 +758,7 @@ export default function AccountSettingsPage() {
                         <p className="font-medium text-red-800">Account Scheduled for Deletion</p>
                         <p className="text-sm text-red-700 mt-1">
                           Your account will be permanently deleted on{' '}
-                          <strong>{formatDeletionDate(deletionStatus.scheduledFor)}</strong>.
+                          <strong>{formatFullDate(deletionStatus.scheduledFor)}</strong>.
                         </p>
                         <p className="text-sm text-red-600 mt-2">
                           You can cancel this request at any time before the deletion date.
