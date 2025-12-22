@@ -221,6 +221,20 @@ export const handleGoogleSignInError = async (error, options = {}) => {
 };
 
 /**
+ * Handle password change errors with context-specific logic
+ */
+export const handlePasswordChangeError = async (error, options = {}) => {
+  return handleFirebaseError(error, 'password-change', options);
+};
+
+/**
+ * Handle email change errors with context-specific logic
+ */
+export const handleEmailChangeError = async (error, options = {}) => {
+  return handleFirebaseError(error, 'email-change', options);
+};
+
+/**
  * Handle password reset success (for consistency)
  */
 export const getPasswordResetSuccessMessage = (verboseMode = null) => {

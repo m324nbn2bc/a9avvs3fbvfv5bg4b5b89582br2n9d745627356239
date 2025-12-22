@@ -8,7 +8,8 @@ import SettingsCard from "@/components/settings/SettingsCard";
 import ConfirmationModal from "@/components/ConfirmationModal";
 import { getStoredSessionId } from "@/utils/sessionManager";
 import { validatePasswordChange, validateEmailChange } from "@/utils/validation";
-import { handleAccountError } from "@/utils/accountErrorHandler";
+import { handlePasswordChangeError, handleEmailChangeError } from "@/utils/firebaseErrorHandler";
+
 
 export default function AccountSettingsPage() {
   const router = useRouter();
@@ -271,7 +272,8 @@ export default function AccountSettingsPage() {
         newPassword: "",
         confirmPassword: ""
       });
-    } catch (error) {
+      const result = await handlePasswordChangeError(error, { returnType: 'string' });
+      setPasswordError(typeof result === 'string' ? result : result.error);
       handleAccountError(error, 'password', setPasswordError);
         setPasswordError("Current password is incorrect");
       } else if (error.code === "auth/weak-password") {
@@ -323,7 +325,8 @@ export default function AccountSettingsPage() {
 
       // Store the new email in sessionStorage for the verify-email-change page
       sessionStorage.setItem('pendingEmailChange', emailForm.newEmail);
-
+      const result = await handleEmailChangeError(error, { returnType: 'string' });
+      setEmailError(typeof result === 'string' ? result : result.error);
       // Reset form and clear messages
       handleAccountError(error, 'email', setEmailError);
         currentPassword: "",

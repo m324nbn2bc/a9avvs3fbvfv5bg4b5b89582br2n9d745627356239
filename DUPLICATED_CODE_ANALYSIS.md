@@ -11,7 +11,7 @@
 4. ~~Form State Initialization~~ - Created custom hook `/src/hooks/useFormValidation.js` used in signin, signup, forgot-password (12 lines eliminated)
 5. ~~Frame Logo Header~~ - Created reusable component `/src/components/FrameLogo.jsx` used in signin, signup, forgot-password (24 lines eliminated)
 6. ~~Error Display Pattern~~ - Created reusable component `/src/components/ErrorAlert.jsx` used in signin, signup, forgot-password (30+ lines eliminated)
-7. ~~Firebase Error Handling~~ - Created utility `/src/utils/accountErrorHandler.js` used in password/email change handlers (15 lines eliminated)
+7. ~~Firebase Error Handling~~ - Enhanced `/src/utils/firebaseErrorHandler.js` with `handlePasswordChangeError()` and `handleEmailChangeError()` handlers, consolidated error handling across entire app (15 lines eliminated)
 
 **Result**: ~246+ lines of duplication eliminated (165 + 81 from new fixes)
 
