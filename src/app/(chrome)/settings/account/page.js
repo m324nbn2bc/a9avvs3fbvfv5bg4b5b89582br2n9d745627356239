@@ -239,8 +239,8 @@ export default function AccountSettingsPage() {
       return;
     }
 
-    if (passwordForm.newPassword.length < 6) {
-      setPasswordError("New password must be at least 6 characters");
+    if (passwordForm.newPassword.length < 8) {
+      setPasswordError("New password must be at least 8 characters");
       return;
     }
 
@@ -516,7 +516,7 @@ export default function AccountSettingsPage() {
                     type="email"
                     value={emailForm.newEmail}
                     onChange={(e) => setEmailForm(prev => ({ ...prev, newEmail: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all text-gray-900 placeholder-gray-500 text-sm"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all text-gray-900 placeholder-gray-500 text-sm"
                     required
                     placeholder="Enter new email address"
                   />
@@ -530,7 +530,7 @@ export default function AccountSettingsPage() {
                     type="email"
                     value={emailForm.confirmEmail}
                     onChange={(e) => setEmailForm(prev => ({ ...prev, confirmEmail: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all text-gray-900 placeholder-gray-500 text-sm"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all text-gray-900 placeholder-gray-500 text-sm"
                     required
                     placeholder="Confirm new email address"
                   />
@@ -625,8 +625,8 @@ export default function AccountSettingsPage() {
                     onChange={(e) => setPasswordForm(prev => ({ ...prev, newPassword: e.target.value }))}
                     className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all text-gray-900 placeholder-gray-500 text-sm"
                     required
-                    minLength={6}
-                    placeholder="Enter new password"
+                    minLength={8}
+                    placeholder="Create a password (min 8 characters)"
                   />
                   <button
                     type="button"
@@ -648,7 +648,6 @@ export default function AccountSettingsPage() {
                     )}
                   </button>
                 </div>
-                <p className="text-xs text-gray-500 mt-1">Minimum 6 characters</p>
               </div>
 
               <div>
@@ -662,6 +661,7 @@ export default function AccountSettingsPage() {
                     onChange={(e) => setPasswordForm(prev => ({ ...prev, confirmPassword: e.target.value }))}
                     className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none transition-all text-gray-900 placeholder-gray-500 text-sm"
                     required
+                    minLength={8}
                     placeholder="Confirm new password"
                   />
                   <button
