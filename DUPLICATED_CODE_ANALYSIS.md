@@ -10,25 +10,13 @@
 ### Fixed with custom hooks and components:
 4. ~~Form State Initialization~~ - Created custom hook `/src/hooks/useFormValidation.js` used in signin, signup, forgot-password (12 lines eliminated)
 5. ~~Frame Logo Header~~ - Created reusable component `/src/components/FrameLogo.jsx` used in signin, signup, forgot-password (24 lines eliminated)
+6. ~~Error Display Pattern~~ - Created reusable component `/src/components/ErrorAlert.jsx` used in signin, signup, forgot-password (30+ lines eliminated)
 
-**Result**: ~201 lines of duplication eliminated (165 + 36 from new fixes)
+**Result**: ~231+ lines of duplication eliminated (165 + 66 from new fixes)
 
 ---
 
 ## REMAINING HIGH PRIORITY (Form Pages: signin, signup, forgot-password)
-
-### Issue 3: Error Display Pattern (Inline JSX)
-- **Files**: signin (lines 119-155), signup (lines 119-122), settings (multiple places)
-- **Duplication**: 5-10 lines × 4+ places = 40+ lines
-- **What's duplicated**: Error alert box styling and display
-```jsx
-{error && (
-  <div className="text-red-600 text-sm text-center p-2 bg-red-50 rounded-lg">
-    {error}
-  </div>
-)}
-```
-- **Solution**: Create component `/src/components/ErrorAlert.jsx`
 
 ---
 
@@ -71,10 +59,10 @@ const data = await response.json();
 | ~~handleInputChange~~ | 3 pages | Function | ~75 | ✅ FIXED |
 | ~~Form state~~ | 3 pages | Hook | ~12 | ✅ FIXED |
 | ~~Frame Logo~~ | 3 pages | Component | ~24 | ✅ FIXED |
-| Error display | 4+ places | Component | ~40 | 🔜 TODO |
+| ~~Error display~~ | 3 pages | Component | ~30+ | ✅ FIXED |
 | Firebase errors | Settings | Function | ~15 | 🔜 TODO |
 | API token pattern | Settings | Function | ~50 | 🔜 TODO |
 | Date formatters | Settings | Function | ~25 | 🔜 TODO |
-| **REMAINING** | **4 issues** | - | **~130 lines** | |
+| **REMAINING** | **3 issues** | - | **~90 lines** | |
 
-**Progress**: 5/9 issues fixed = 201 lines eliminated (56% complete)
+**Progress**: 6/9 issues fixed = 231+ lines eliminated (67% complete)

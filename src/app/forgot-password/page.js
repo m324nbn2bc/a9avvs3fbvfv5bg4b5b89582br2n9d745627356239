@@ -7,6 +7,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useFormValidation } from '../../hooks/useFormValidation';
 import { validateFormFields, handleFieldInputChange } from '../../utils/formHelpers';
 import FrameLogo from '../../components/FrameLogo';
+import ErrorAlert from '../../components/ErrorAlert';
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
@@ -147,14 +148,7 @@ export default function ForgotPasswordPage() {
           <div className="bg-white rounded-b-lg border border-t-0 border-gray-200 px-6 py-6 shadow-sm">
             {/* Forgot Password Form */}
             <form className="space-y-4 mb-4" onSubmit={handleForgotPassword} noValidate>
-              {error && (
-                <div 
-                  className="text-sm p-3 rounded-lg border text-red-800 bg-red-50 border-red-200"
-                  role="alert"
-                >
-                  {error}
-                </div>
-              )}
+              <ErrorAlert error={error} variant="bordered" />
               <div>
                 <label htmlFor="forgot-password-email" className="block text-sm font-medium text-gray-800 mb-1">
                   Email Address

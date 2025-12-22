@@ -7,6 +7,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useFormValidation } from '../../hooks/useFormValidation';
 import { validateFormFields, handleFieldInputChange } from '../../utils/formHelpers';
 import FrameLogo from '../../components/FrameLogo';
+import ErrorAlert from '../../components/ErrorAlert';
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -112,11 +113,7 @@ export default function SignUpPage() {
             <div className="bg-white rounded-b-lg border border-t-0 border-gray-200 px-6 py-6 shadow-sm">
             {/* Email Sign Up Form */}
             <form className="space-y-3 mb-4" onSubmit={handleEmailSignUp} noValidate>
-              {error && (
-                <div className="text-red-600 text-sm text-center p-2 bg-red-50 rounded-lg" role="alert">
-                  {error}
-                </div>
-              )}
+              <ErrorAlert error={error} />
               <div>
                 <label htmlFor="signup-name" className="block text-sm font-medium text-gray-800 mb-1">
                   Name

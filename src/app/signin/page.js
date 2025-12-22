@@ -7,6 +7,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { useFormValidation } from '../../hooks/useFormValidation';
 import { validateFormFields, handleFieldInputChange } from '../../utils/formHelpers';
 import FrameLogo from '../../components/FrameLogo';
+import ErrorAlert from '../../components/ErrorAlert';
 
 export default function SignInPage() {
   const router = useRouter();
@@ -112,26 +113,23 @@ export default function SignInPage() {
             <div className="bg-white rounded-b-lg border border-t-0 border-gray-200 px-6 py-6 shadow-sm">
             {/* Email Sign In Form */}
             <form className="space-y-3 mb-4" onSubmit={handleEmailSignIn} noValidate>
-              {error && (
-                <div className="text-red-600 text-sm text-center p-2 bg-red-50 rounded-lg" role="alert">
-                  <div>{error}</div>
-                  {error.toLowerCase().includes('invalid') && (error.toLowerCase().includes('email') || error.toLowerCase().includes('password')) && (
-                    <div className="mt-2 text-gray-600">
-                      <span className="text-xs">
-                        Forgot your password? Click on "
-                        <button
-                          type="button"
-                          onClick={() => router.push('/forgot-password')}
-                          className="btn-link font-medium"
-                        >
-                          Forgot Password?
-                        </button>
-                        " to reset it.
-                      </span>
-                    </div>
-                  )}
-                </div>
-              )}
+              <ErrorAlert error={error}>
+                {error && error.toLowerCase().includes('invalid') && (error.toLowerCase().includes('email') || error.toLowerCase().includes('password')) && (
+                  <div className="mt-2 text-gray-600">
+                    <span className="text-xs">
+                      Forgot your password? Click on "
+                      <button
+                        type="button"
+                        onClick={() => router.push('/forgot-password')}
+                        className="btn-link font-medium"
+                      >
+                        Forgot Password?
+                      </button>
+                      " to reset it.
+                    </span>
+                  </div>
+                )}
+              </ErrorAlert>
               <div>
                 <label htmlFor="signin-email" className="block text-sm font-medium text-gray-800 mb-1">
                   Email
