@@ -41,3 +41,45 @@ export const validateFormFields = (formData, formType, setValidationErrors, fiel
   
   return validation.isValid;
 };
+
+/**
+ * Handles real-time input field validation
+ * @param {string} field - Field name
+ * @param {string} value - Field value
+ * @param {object} validationErrors - Current validation errors state
+ * @param {function} setValidationErrors - State setter for validation errors
+ * @param {function} setFieldValidation - State setter for field validation status
+ * @param {object} validatorMap - Map of field names to validator functions
+ */
+export const handleFieldInputChange = (
+  field,
+  value,
+  validationErrors,
+  setValidationErrors,
+  setFieldValidation,
+  validatorMap
+) => {
+  // Clear form validation errors when user starts typing
+  if (validationErrors[field]) {
+    setValidationErrors(prev => ({ ...prev, [field]: '' }));
+  }
+  
+  // Perform real-time validation
+  let validationError = null;
+  let isValid = false;
+  
+  if (field in validatorMap && value.trim()) {
+    validationError = validatorMap[field](value);
+    isValid = !validationError;
+  }
+  
+  // Update field validation status
+  setFieldValidation(prev => ({
+    ...prev,
+    [field]: {
+      isValid,
+      error: validationError,
+      hasValue: value.trim().length > 0
+    }
+  }));
+};

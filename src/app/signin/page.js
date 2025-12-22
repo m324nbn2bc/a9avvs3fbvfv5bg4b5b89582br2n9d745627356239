@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { validateEmail, validatePassword, validateForm } from '../../utils/validation';
 import { useAuth } from '../../hooks/useAuth';
-import { validateFormFields } from '../../utils/formHelpers';
+import { validateFormFields, handleFieldInputChange } from '../../utils/formHelpers';
 import { Caveat } from "next/font/google";
 import Link from "next/link";
 
@@ -82,32 +82,11 @@ export default function SignInPage() {
   };
 
   const handleInputChange = (field, value) => {
-    // Clear form validation errors when user starts typing
-    if (validationErrors[field]) {
-      setValidationErrors(prev => ({ ...prev, [field]: '' }));
-    }
-    
-    // Perform real-time validation
-    let validationError = null;
-    let isValid = false;
-    
-    if (field === 'email' && value.trim()) {
-      validationError = validateEmail(value);
-      isValid = !validationError;
-    } else if (field === 'password' && value.trim()) {
-      validationError = validatePassword(value, true);
-      isValid = !validationError;
-    }
-    
-    // Update field validation status
-    setFieldValidation(prev => ({
-      ...prev,
-      [field]: {
-        isValid,
-        error: validationError,
-        hasValue: value.trim().length > 0
-      }
-    }));
+    const validatorMap = {
+      email: validateEmail,
+      password: (val) => validatePassword(val, true)
+    };
+    handleFieldInputChange(field, value, validationErrors, setValidationErrors, setFieldValidation, validatorMap);
   };
 
   // Don't show loading overlay during auth actions - keep form visible
