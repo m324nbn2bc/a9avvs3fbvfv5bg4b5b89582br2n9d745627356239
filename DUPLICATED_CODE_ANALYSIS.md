@@ -1,26 +1,19 @@
 # Duplicated Code Analysis - Twibbonize Platform
 
-## HIGH PRIORITY (Form Pages: signin, signup, forgot-password)
+## ✅ FIXED ISSUES (Removed from active list)
 
-### Issue 1: scrollToField Function
-- **Files**: `/src/app/signin/page.js` (lines 33-50), `/src/app/signup/page.js` (lines 34-52), `/src/app/forgot-password/page.js` (lines 32-48)
-- **Duplication**: 18 lines × 3 pages = 54 lines
-- **What's duplicated**: Scroll and focus logic - identical except `fieldRefs` object changes
-- **Solution**: Extract to `/src/utils/formHelpers.js` as `scrollToField(fieldName, fieldRefs)`
+The following issues have been successfully refactored with centralized utilities in `/src/utils/formHelpers.js`:
+1. ~~scrollToField Function~~ - Extracted to `scrollToField(fieldName, fieldRefs)` utility
+2. ~~validateFormFields Function~~ - Extracted to `validateFormFields(formData, formType, setValidationErrors, fieldRefs)` utility
+3. ~~handleInputChange Function~~ - Extracted to `handleFieldInputChange(field, value, ...)` with validator map pattern
 
-### Issue 2: validateFormFields Function
-- **Files**: signin (lines 52-63), signup (lines 54-65), forgot-password (lines 50-61)
-- **Duplication**: 12 lines × 3 pages = 36 lines
-- **What's duplicated**: Validation flow + error scrolling - only `formType` differs
-- **Solution**: Extract to `/src/utils/formHelpers.js` as `validateFormFields(formData, formType, ...)`
+**Result**: ~165 lines of duplication eliminated from signin, signup, and forgot-password pages
 
-### Issue 3: handleInputChange Function
-- **Files**: signin (lines 114-141), signup (lines 114-144), forgot-password (lines 63-87)
-- **Duplication**: ~25 lines × 3 pages = 75 lines
-- **What's duplicated**: Clear errors, validate field, update state - validators differ per field
-- **Solution**: Extract to `/src/utils/formHelpers.js` with field validator map
+---
 
-### Issue 4: Form State Initialization
+## REMAINING HIGH PRIORITY (Form Pages: signin, signup, forgot-password)
+
+### Issue 1: Form State Initialization
 - **Files**: signin, signup, forgot-password (all have same 4 state variables)
 - **Duplication**: 4 lines × 3 pages = 12 lines
 ```javascript
@@ -31,8 +24,8 @@ const [loading, setLoading] = useState(false);
 ```
 - **Solution**: Create custom hook `/src/hooks/useFormValidation.js`
 
-### Issue 5: Frame Logo Header
-- **Files**: signin (lines 148-155), signup (lines 151-158), forgot-password (lines ~129-136)
+### Issue 2: Frame Logo Header
+- **Files**: signin (lines 97-104), signup (lines 97-104), forgot-password (lines 73-80)
 - **Duplication**: 8 lines × 3 pages = 24 lines
 - **What's duplicated**: Same logo, styling, and Link component - identical
 ```jsx
@@ -44,8 +37,8 @@ const [loading, setLoading] = useState(false);
 ```
 - **Solution**: Create component `/src/components/FrameLogo.jsx`
 
-### Issue 6: Error Display Pattern (Inline JSX)
-- **Files**: signin (lines 170-189), signup (lines 173-177), settings (multiple places)
+### Issue 3: Error Display Pattern (Inline JSX)
+- **Files**: signin (lines 119-155), signup (lines 119-122), settings (multiple places)
 - **Duplication**: 5-10 lines × 4+ places = 40+ lines
 - **What's duplicated**: Error alert box styling and display
 ```jsx
@@ -59,16 +52,16 @@ const [loading, setLoading] = useState(false);
 
 ---
 
-## MEDIUM PRIORITY (Settings Page)
+## REMAINING MEDIUM PRIORITY (Settings Page)
 
-### Issue 7: Firebase Error Handling
+### Issue 4: Firebase Error Handling
 - **Files**: `/src/app/(chrome)/settings/account/page.js`
-- **Locations**: `handlePasswordChange()` (lines 273-281) + `handleEmailChange()` (lines 340-353)
+- **Locations**: `handlePasswordChange()` + `handleEmailChange()`
 - **Duplication**: Error code mapping repeated in 2 functions
 - **What's duplicated**: Error codes like `auth/wrong-password`, `auth/weak-password`, etc.
 - **Solution**: Create `/src/utils/firebaseErrorHandler.js` with centralized error messages
 
-### Issue 8: API Token Fetching Pattern
+### Issue 5: API Token Fetching Pattern
 - **Files**: `/src/app/(chrome)/settings/account/page.js`
 - **Locations**: Lines 67, 100, 132, 366, 401
 - **Duplication**: Same pattern repeated 5+ times (~10 lines each = 50+ lines)
@@ -81,9 +74,9 @@ const data = await response.json();
 ```
 - **Solution**: Create `/src/utils/apiClient.js` with `authenticatedFetch(url, options, user)`
 
-### Issue 9: Date Formatting Functions
+### Issue 6: Date Formatting Functions
 - **Files**: `/src/app/(chrome)/settings/account/page.js`
-- **Locations**: `formatSessionDate()` (lines 189-208) + `formatDeletionDate()` (lines 424-432)
+- **Locations**: `formatSessionDate()` + `formatDeletionDate()`
 - **What's duplicated**: Two separate date formatting functions in same file
 - **Solution**: Create `/src/utils/dateFormatter.js` with `formatRelativeTime()` and `formatFullDate()`
 
@@ -91,17 +84,17 @@ const data = await response.json();
 
 ## Summary
 
-| Issue | Duplication | Type | Lines |
-|-------|-------------|------|-------|
-| scrollToField | 3 pages | Function | ~54 |
-| validateFormFields | 3 pages | Function | ~36 |
-| handleInputChange | 3 pages | Function | ~75 |
-| Form state | 3 pages | Hook | ~12 |
-| Frame Logo | 3 pages | Component | ~24 |
-| Error display | 4+ places | Component | ~40 |
-| Firebase errors | Settings | Function | ~15 |
-| API token pattern | Settings | Function | ~50 |
-| Date formatters | Settings | Function | ~25 |
-| **TOTAL** | **9 issues** | - | **~330 lines** |
+| Issue | Duplication | Type | Lines | Status |
+|-------|-------------|------|-------|--------|
+| ~~scrollToField~~ | 3 pages | Function | ~54 | ✅ FIXED |
+| ~~validateFormFields~~ | 3 pages | Function | ~36 | ✅ FIXED |
+| ~~handleInputChange~~ | 3 pages | Function | ~75 | ✅ FIXED |
+| Form state | 3 pages | Hook | ~12 | 🔜 TODO |
+| Frame Logo | 3 pages | Component | ~24 | 🔜 TODO |
+| Error display | 4+ places | Component | ~40 | 🔜 TODO |
+| Firebase errors | Settings | Function | ~15 | 🔜 TODO |
+| API token pattern | Settings | Function | ~50 | 🔜 TODO |
+| Date formatters | Settings | Function | ~25 | 🔜 TODO |
+| **REMAINING** | **6 issues** | - | **~165 lines** | |
 
-**Recommendation**: Start HIGH PRIORITY (form pages) = -270 lines, then MEDIUM PRIORITY (settings utilities) = -90 lines
+**Progress**: 3/9 issues fixed = 165 lines eliminated (50% complete)
