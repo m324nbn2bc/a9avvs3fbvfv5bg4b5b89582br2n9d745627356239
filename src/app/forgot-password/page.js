@@ -6,10 +6,7 @@ import { validateEmail, validateForm } from '../../utils/validation';
 import { useAuth } from '../../hooks/useAuth';
 import { useFormValidation } from '../../hooks/useFormValidation';
 import { validateFormFields, handleFieldInputChange } from '../../utils/formHelpers';
-import { Caveat } from "next/font/google";
-import Link from "next/link";
-
-const caveat = Caveat({ subsets: ["latin"], weight: ["700"] });
+import FrameLogo from '../../components/FrameLogo';
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
@@ -76,15 +73,7 @@ export default function ForgotPasswordPage() {
   if (success) {
     return (
       <div className="min-h-screen bg-white">
-        {/* Frame Logo */}
-        <div className="absolute top-6 left-6 z-50 mb-8">
-          <Link 
-            href="/" 
-            className={`${caveat.className} text-2xl md:text-3xl font-bold text-emerald-700 hover:text-emerald-800 transition-all duration-300 hover:scale-110`}
-          >
-            Frame
-          </Link>
-        </div>
+        <FrameLogo />
         
         <div className="min-h-screen flex">
           {/* Left Side - Success Message */}
@@ -143,15 +132,7 @@ export default function ForgotPasswordPage() {
 
   return (
     <div className="min-h-screen bg-white flex">
-      {/* Frame Logo - Top Left */}
-      <div className="absolute top-6 left-6 z-10">
-        <Link 
-          href="/" 
-          className={`${caveat.className} text-2xl md:text-3xl font-bold text-emerald-700 hover:text-emerald-800 transition-all duration-300 hover:scale-110`}
-        >
-          Frame
-        </Link>
-      </div>
+      <FrameLogo zIndex="z-10" />
 
       {/* Left Side - Form */}
       <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 py-12">

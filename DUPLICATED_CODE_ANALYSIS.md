@@ -2,40 +2,20 @@
 
 ## ✅ FIXED ISSUES (Removed from active list)
 
-The following issues have been successfully refactored with centralized utilities in `/src/utils/formHelpers.js`:
+### Fixed in `/src/utils/formHelpers.js`:
 1. ~~scrollToField Function~~ - Extracted to `scrollToField(fieldName, fieldRefs)` utility
 2. ~~validateFormFields Function~~ - Extracted to `validateFormFields(formData, formType, setValidationErrors, fieldRefs)` utility
 3. ~~handleInputChange Function~~ - Extracted to `handleFieldInputChange(field, value, ...)` with validator map pattern
 
-**Result**: ~165 lines of duplication eliminated from signin, signup, and forgot-password pages
+### Fixed with custom hooks and components:
+4. ~~Form State Initialization~~ - Created custom hook `/src/hooks/useFormValidation.js` used in signin, signup, forgot-password (12 lines eliminated)
+5. ~~Frame Logo Header~~ - Created reusable component `/src/components/FrameLogo.jsx` used in signin, signup, forgot-password (24 lines eliminated)
+
+**Result**: ~201 lines of duplication eliminated (165 + 36 from new fixes)
 
 ---
 
 ## REMAINING HIGH PRIORITY (Form Pages: signin, signup, forgot-password)
-
-### Issue 1: Form State Initialization
-- **Files**: signin, signup, forgot-password (all have same 4 state variables)
-- **Duplication**: 4 lines × 3 pages = 12 lines
-```javascript
-const [validationErrors, setValidationErrors] = useState({});
-const [fieldValidation, setFieldValidation] = useState({});
-const [error, setError] = useState('');
-const [loading, setLoading] = useState(false);
-```
-- **Solution**: Create custom hook `/src/hooks/useFormValidation.js`
-
-### Issue 2: Frame Logo Header
-- **Files**: signin (lines 97-104), signup (lines 97-104), forgot-password (lines 73-80)
-- **Duplication**: 8 lines × 3 pages = 24 lines
-- **What's duplicated**: Same logo, styling, and Link component - identical
-```jsx
-<div className="absolute top-6 left-6 z-50 mb-8">
-  <Link href="/" className={`${caveat.className} text-2xl md:text-3xl font-bold text-emerald-700 hover:text-emerald-800 transition-all duration-300 hover:scale-110`}>
-    Frame
-  </Link>
-</div>
-```
-- **Solution**: Create component `/src/components/FrameLogo.jsx`
 
 ### Issue 3: Error Display Pattern (Inline JSX)
 - **Files**: signin (lines 119-155), signup (lines 119-122), settings (multiple places)
@@ -89,12 +69,12 @@ const data = await response.json();
 | ~~scrollToField~~ | 3 pages | Function | ~54 | ✅ FIXED |
 | ~~validateFormFields~~ | 3 pages | Function | ~36 | ✅ FIXED |
 | ~~handleInputChange~~ | 3 pages | Function | ~75 | ✅ FIXED |
-| Form state | 3 pages | Hook | ~12 | 🔜 TODO |
-| Frame Logo | 3 pages | Component | ~24 | 🔜 TODO |
+| ~~Form state~~ | 3 pages | Hook | ~12 | ✅ FIXED |
+| ~~Frame Logo~~ | 3 pages | Component | ~24 | ✅ FIXED |
 | Error display | 4+ places | Component | ~40 | 🔜 TODO |
 | Firebase errors | Settings | Function | ~15 | 🔜 TODO |
 | API token pattern | Settings | Function | ~50 | 🔜 TODO |
 | Date formatters | Settings | Function | ~25 | 🔜 TODO |
-| **REMAINING** | **6 issues** | - | **~165 lines** | |
+| **REMAINING** | **4 issues** | - | **~130 lines** | |
 
-**Progress**: 3/9 issues fixed = 165 lines eliminated (50% complete)
+**Progress**: 5/9 issues fixed = 201 lines eliminated (56% complete)

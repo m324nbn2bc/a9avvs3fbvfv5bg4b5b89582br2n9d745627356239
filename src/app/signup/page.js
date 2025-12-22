@@ -6,10 +6,7 @@ import { validateEmail, validatePassword, validateName, validateForm } from '../
 import { useAuth } from '../../hooks/useAuth';
 import { useFormValidation } from '../../hooks/useFormValidation';
 import { validateFormFields, handleFieldInputChange } from '../../utils/formHelpers';
-import { Caveat } from "next/font/google";
-import Link from "next/link";
-
-const caveat = Caveat({ subsets: ["latin"], weight: ["700"] });
+import FrameLogo from '../../components/FrameLogo';
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -100,15 +97,7 @@ export default function SignUpPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Frame Logo */}
-      <div className="absolute top-6 left-6 z-50 mb-8">
-        <Link 
-          href="/" 
-          className={`${caveat.className} text-2xl md:text-3xl font-bold text-emerald-700 hover:text-emerald-800 transition-all duration-300 hover:scale-110`}
-        >
-          Frame
-        </Link>
-      </div>
+      <FrameLogo />
       
       <div className="min-h-screen flex">
         {/* Left Side - Form */}
