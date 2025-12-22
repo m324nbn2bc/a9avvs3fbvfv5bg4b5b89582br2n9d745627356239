@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { validateEmail, validatePassword, validateName, validateForm } from '../../utils/validation';
 import { useAuth } from '../../hooks/useAuth';
+import { useFormValidation } from '../../hooks/useFormValidation';
 import { validateFormFields, handleFieldInputChange } from '../../utils/formHelpers';
 import { Caveat } from "next/font/google";
 import Link from "next/link";
@@ -14,10 +15,16 @@ export default function SignUpPage() {
   const router = useRouter();
   const { user, loading: authLoading, signInWithGoogle, signUpWithEmail } = useAuth();
   
-  const [validationErrors, setValidationErrors] = useState({});
-  const [fieldValidation, setFieldValidation] = useState({});
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const {
+    validationErrors,
+    setValidationErrors,
+    fieldValidation,
+    setFieldValidation,
+    error,
+    setError,
+    loading,
+    setLoading,
+  } = useFormValidation();
   const [showPassword, setShowPassword] = useState(false);
   
   // Refs for form validation scrolling
